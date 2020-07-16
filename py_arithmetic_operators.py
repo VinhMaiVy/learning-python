@@ -26,16 +26,13 @@ import sys
 
 
 def main():
-    if n % 2:
-        print("Weird")
-    else:
-        if (n >= 6) and (n<=20):
-            print("Weird")
-        else:
-            print("Not Weird")
+    print(a+b)
+    print(a-b)
+    print(a*b)
 
 if __name__ == '__main__':
-    n = int(input().strip())
+    a = int(input())
+    b = int(input())
 
 if __name__ == "__main__":
     # execute only if run as a script

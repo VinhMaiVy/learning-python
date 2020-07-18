@@ -28,7 +28,4 @@ def main():
 if __name__ == '__main__':
     n = int(input())
     arr = map(int, input().split())
-
-if __name__ == "__main__":
-    # execute only if run as a script
     main()

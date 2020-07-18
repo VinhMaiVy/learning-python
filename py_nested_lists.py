@@ -12,8 +12,6 @@ import random
 import re
 import sys
 
-students = []
-
 def main():
     print(list(students))
     students.sort(key = lambda x: x[1])
@@ -24,11 +22,9 @@ def main():
     for student in runner_up_list: print(*student[0])
 
 if __name__ == '__main__':
+    students = []
     for i in range(int(input())):
         name = input()
         score = float(input())
         students.append([name, score])
-
-if __name__ == "__main__":
-    # execute only if run as a script
     main()

@@ -10,6 +10,7 @@ Sample Input:
 2 3 6 6 5
 
 Result:
+5
 
 
 """

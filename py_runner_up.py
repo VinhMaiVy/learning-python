@@ -25,7 +25,6 @@ def main():
     sorted_arr = sorted(set(arr))
     print(sorted_arr[len(sorted_arr)-2])
 
-
 if __name__ == '__main__':
     n = int(input())
     arr = map(int, input().split())

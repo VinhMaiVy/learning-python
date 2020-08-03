@@ -19,7 +19,7 @@ Sample Output
 
 def main():
     marks = student_marks[query_name]
-    print(round(sum(marks)/len(marks),2))
+    print("{:.2f}".format(sum(marks)/len(marks)))
 
 if __name__ == '__main__':
     n = int(input())

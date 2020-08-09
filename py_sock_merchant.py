@@ -6,7 +6,6 @@ def sockMerchant(n, ar):
         pairs += ar.count(element) // 2
     return pairs
 
-
 if __name__ == '__main__':
     n = int(input())
     ar = list(map(int, input().rstrip().split()))

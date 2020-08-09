@@ -12,7 +12,7 @@ def plusMinus(arr):
             pos += 1
         else:
             neg += 1
-    print(pos, neg, zer, tot)
+    # print(pos, neg, zer, tot)
     print("{:.6f}".format(float(pos)/float(tot)))
     print("{:.6f}".format(float(neg) / float(tot)))
     print("{:.6f}".format(float(zer) / float(tot)))

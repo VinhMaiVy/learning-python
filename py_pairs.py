@@ -2,6 +2,17 @@
 
 def pairs(k, arr):
     result = 0
+    set_arr = set(arr)
+    while len(set_arr) > 1:
+        n = set_arr.pop()
+        if n+k in set_arr:
+            result += 1
+        if n-k in set_arr:
+            result += 1
+    return result
+
+def pairs2(k, arr):
+    result = 0
     sorted_arr = tuple(sorted(arr))
     len_arr = len(sorted_arr)
     for n in range(len_arr-1):

@@ -9,26 +9,41 @@
 2 6
 3 5
 6 9
-14
-
-0 2 1 8 4 6 9
-3 5
-7
+-> 23
 
 5 3
 0 1
 2 3
 0 4
+-> 6
 
 4 2
 1 2
 2 3
+-> 3
+
+10000 2
+1 2
+3 4
+-> 49994998
 
 """
 
+from itertools import combinations as combo
+
+def journeyToMoon2(n, astronaut):
+    C = []                                          # partition (as array) of sets of astronauts by country
+    for a,b in astronaut :
+        p, m = {a,b}, len(C)                        # p is doubleton set, m is #countries
+        i = next( (k for k in range(m) if p & C[k]), -1 )
+        if i == -1 : C.append( p ) ; continue       # form a new country
+        j = next( (k for k in range(i+1,m) if p & C[k]), -1 )
+        if j == -1 : C[i] |= p                      # chain annexation of pair p
+        else : C[i] |= C[j] ; del C[j]              # merge countries along p
+    nC = list(map( len, C )) ; s = n - sum( nC )    # find subtotals
+    return s*(s-1)//2 + s*(n-s) + sum( x*y for x,y in combo(nC,2))
 
 def journeyToMoon(n, astronaut):
-    result = 0
     astronaut_country = {}
     for a in range(n):
         astronaut_country[a] = a
@@ -46,10 +61,11 @@ def journeyToMoon(n, astronaut):
         else:
             country_astronauts[a] += 1
 
-    while country_astronauts.keys():
-        astronaut_for_country = country_astronauts.popitem()
-        for a in country_astronauts:
-            result += astronaut_for_country[1]*country_astronauts[a]
+    result = 0
+    sum = 0
+    for s in country_astronauts.values():
+        result += sum*s
+        sum += s
 
     return result
 

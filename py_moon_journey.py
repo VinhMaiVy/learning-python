@@ -56,6 +56,7 @@ def journeyToMoon2(n, astronaut):                   # Uses set-arithmetic & coun
 
     return s*(s-1)//2 + s*(n-s) + sum( x*y for x,y in combo(nC,2))
 
+
 def journeyToMoon(n, astronaut):
     astronaut_country = {}
     for a in range(n):
@@ -63,7 +64,7 @@ def journeyToMoon(n, astronaut):
 
     for p in astronaut:
         for a in range(n):
-            if astronaut_country[a] == astronaut_country[p[1]]:
+            if (astronaut_country[a] == astronaut_country[p[1]]):
                 astronaut_country[a] = astronaut_country[p[0]]
         astronaut_country[p[1]] = astronaut_country[p[0]]
 

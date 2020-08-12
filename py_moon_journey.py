@@ -9,36 +9,49 @@
 2 6
 3 5
 6 9
+14
+
+0 2 1 8 4 6 9
+3 5
+7
+
+5 3
+0 1
+2 3
+0 4
+
+4 2
+1 2
+2 3
+
 """
 
 
 def journeyToMoon(n, astronaut):
     result = 0
-
-    p = astronaut.pop()
-    countries_id = 0
-    countries = {}
-    countries[countries_id] = p
+    astronaut_country = {}
+    for a in range(n):
+        astronaut_country[a] = a
 
     for p in astronaut:
-        t_countries = dict(countries)
-        notfound = True
-        for t in t_countries:
-            current_countries = countries.get(t)
-            if p[0] in current_countries:
-                current_countries.append(p[1])
-                countries[t] = current_countries
-                notfound = False
-            if p[1] in current_countries:
-                current_countries.append(p[0])
-                countries[t] = current_countries
-                notfound = False
-                break
-        if notfound:
-            countries_id += 1
-            countries[countries_id] = p
+        for a in range(n):
+            if astronaut_country[a] == astronaut_country[p[1]]:
+                astronaut_country[a] = astronaut_country[p[0]]
+        astronaut_country[p[1]] = astronaut_country[p[0]]
 
-    return countries
+    country_astronauts = {}
+    for a in astronaut_country.values():
+        if a not in country_astronauts:
+            country_astronauts[a] = 1
+        else:
+            country_astronauts[a] += 1
+
+    while country_astronauts.keys():
+        astronaut_for_country = country_astronauts.popitem()
+        for a in country_astronauts:
+            result += astronaut_for_country[1]*country_astronauts[a]
+
+    return result
 
 if __name__ == '__main__':
 

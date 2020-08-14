@@ -8,8 +8,8 @@ Input:
 Tsi
 h%x
 i #
-sM
-$a
+s $
+$a$
 #t%
 ir!
 
@@ -17,6 +17,8 @@ Output:
 This is Matrix#  %!
 
 """
+
+import re
 
 if __name__ == '__main__':
 
@@ -28,3 +30,11 @@ if __name__ == '__main__':
     for _ in range(n):
         matrix_item = input()
         matrix.append(matrix_item)
+
+    decoded = ''
+    for i in range(m):
+        for j in matrix:
+            decoded = decoded + j[i]
+
+    pattern = re.compile("^$")
+    print(pattern.match(decoded))

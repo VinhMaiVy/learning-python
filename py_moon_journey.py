@@ -38,13 +38,13 @@ def journeyToMoon(n, astronaut):
 
     for p in astronaut:
         p0 = p[0]
-        if p[0] not in countries[p0]:
+        if p0 not in countries:
             for p0 in countries:  # Find country of astronaut 1
                 if p[0] in countries[p0]:
                     break
 
         p1 = p[1]
-        if p[1] not in countries[p1]:
+        if p1 not in countries:
             for p1 in countries:  # Find country of astronaut 2
                 if p[1] in countries[p1]:
                     break

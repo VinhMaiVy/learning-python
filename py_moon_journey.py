@@ -37,19 +37,19 @@ def journeyToMoon(n, astronaut):
         countries[a] = {a}
 
     for p in astronaut:
-        if p[0] not in countries:
+        if p[0] in countries:
+            p0 = p[0]
+        else:
             for p0 in countries:  # Find country of astronaut 1
                 if p[0] in countries[p0]:
                     break
-        else:
-            p0 = p[0]
 
-        if p[1] not in countries:
+        if p[1] in countries:
+            p1 = p[1]
+        else:
             for p1 in countries:  # Find country of astronaut 2
                 if p[1] in countries[p1]:
                     break
-        else:
-            p1 = p[1]
 
         if p0 != p1:  # If different countries, then we merge the 2 sets
             countries[p0].update(countries[p1])

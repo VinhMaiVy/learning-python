@@ -29,65 +29,38 @@
 
 """
 
-from itertools import combinations as combo
-
-
-def journeyToMoon2(n, astronaut):                   # Uses set-arithmetic & counting
-
-    C = []                                          # partition (as array) of sets of astronauts by country
-
-    for a,b in astronaut:
-        p, m = {a,b}, len(C)                        # p is doubleton set, m is #countries
-
-        i = next( (k for k in range(m) if p & C[k]), -1 )
-        if i == -1:
-            C.append( p )
-            continue                                # form a new country
-
-        j = next( (k for k in range(i+1,m) if p & C[k]), -1 )
-        if j == -1:
-            C[i] |= p                               # chain annexation of pair p
-        else:
-            C[i] |= C[j]
-            del C[j]                                # merge countries along p
-
-    nC = list(map( len, C ))
-    s = n - sum( nC )                               # find subtotals
-
-    return s*(s-1)//2 + s*(n-s) + sum( x*y for x,y in combo(nC,2))
-
 
 def journeyToMoon(n, astronaut):
-    astronaut_country = {}
+    country_astronauts = {}
     for a in range(n):
-        astronaut_country[a] = a
+        country_astronauts[a] = {a}
 
     for p in astronaut:
-        for a in range(n):
-            if (astronaut_country[a] == astronaut_country[p[1]]):
-                astronaut_country[a] = astronaut_country[p[0]]
-        astronaut_country[p[1]] = astronaut_country[p[0]]
-
-    country_astronauts = {}
-    for a in astronaut_country.values():
-        if a not in country_astronauts:
-            country_astronauts[a] = 1
-        else:
-            country_astronauts[a] += 1
+        for p0 in country_astronauts:  # Find if the country astronaut 1 is in
+            if p[0] in country_astronauts[p0]:
+                break
+        for p1 in country_astronauts:  # Find if the country astronaut 2 is in
+            if p[1] in country_astronauts[p1]:
+                break
+        if p0 != p1:  # If different country, then we merge
+            country_astronauts[p0].update(country_astronauts[p1])
+            del country_astronauts[p1]
 
     result = 0
     sum = 0
-    for s in country_astronauts.values():
-        result += sum*s
+    for c in country_astronauts:
+        s = len(country_astronauts[c])
+        result += sum * s
         sum += s
 
     return result
 
+
 if __name__ == '__main__':
 
     np = input().split()
-    n = int(np[0]) # Number of astronauts
-    p = int(np[1]) # Number of pairs
+    n = int(np[0])  # Number of astronauts
+    p = int(np[1])  # Number of pairs
 
     astronaut = []
     for _ in range(p):

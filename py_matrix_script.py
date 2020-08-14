@@ -36,5 +36,7 @@ if __name__ == '__main__':
         for j in matrix:
             decoded = decoded + j[i]
 
-    pattern = re.compile("^$")
-    print(pattern.match(decoded))
+    print(decoded)
+    decoded = re.sub("[^a-zA-Z0-9]", " ",decoded)
+    decoded = re.sub("[ ]*", " ", decoded)
+    print(decoded)

@@ -31,27 +31,27 @@
 
 
 def journeyToMoon(n, astronaut):
-    country_astronauts = {}
+    countries = {}
     for a in range(n):
-        country_astronauts[a] = {a}
+        countries[a] = {a}
 
     for p in astronaut:
-        for p0 in country_astronauts:  # Find if the country astronaut 1 is in
-            if p[0] in country_astronauts[p0]:
+        for p0 in countries:  # Find country of astronaut 1
+            if p[0] in countries[p0]:
                 break
-        for p1 in country_astronauts:  # Find if the country astronaut 2 is in
-            if p[1] in country_astronauts[p1]:
+        for p1 in countries:  # Find country of astronaut 2
+            if p[1] in countries[p1]:
                 break
-        if p0 != p1:  # If different country, then we merge
-            country_astronauts[p0].update(country_astronauts[p1])
-            del country_astronauts[p1]
+        if p0 != p1:  # If different countries, then we merge the 2 sets
+            countries[p0].update(countries[p1])
+            del countries[p1] # delete the orphan set
 
     result = 0
     sum = 0
-    for c in country_astronauts:
-        s = len(country_astronauts[c])
-        result += sum * s
-        sum += s
+    for c in countries:
+        astronauts = len(countries[c])
+        result += sum * astronauts
+        sum += astronauts
 
     return result
 

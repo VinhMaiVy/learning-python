@@ -53,7 +53,7 @@ def journeyToMoon(n, astronaut):
 
         if p0 != p1:  # If different countries, then we merge the 2 sets
             countries[p0].update(countries[p1])
-            del countries[p1] # delete the orphan set
+            del countries[p1]  # delete the orphan set
 
     result = 0
     sum = 0

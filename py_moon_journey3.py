@@ -56,15 +56,13 @@ def journeyToMoon(n, astronaut):
             countries[c1].update(countries[c2])
             del countries[c2]  # delete the orphan set
 
+    all = {-1}
+    for cc in countries:
+        all.update(countries[cc])
+
     for a in range(n):
-        if not a in countries:
-            c = -1
-            for cc in countries:
-                if a in countries[cc]:
-                    c = a
-                    break
-            if c == -1:
-               countries[a] = {a}
+        if not a in all:
+            countries[a] = {a}
 
     result = 0
     sum = 0

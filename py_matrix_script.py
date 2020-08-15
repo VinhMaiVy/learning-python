@@ -37,6 +37,5 @@ if __name__ == '__main__':
             decoded = decoded + j[i]
 
     print(decoded)
-    decoded = re.sub("[^a-zA-Z0-9]", " ",decoded)
-    decoded = re.sub("[ ]*", " ", decoded)
+    decoded = re.sub(r'\b[^a-zA-Z0-9]+\b', r' ',decoded)
     print(decoded)

@@ -1,5 +1,11 @@
 #! /bin/python
 
+"""
+
+No Idea
+
+"""
+
 if __name__ == '__main__':
     n, m = list(map(int, input().split()))
     N = [int(i) for i in input().split()]

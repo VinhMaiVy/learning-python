@@ -15,7 +15,7 @@ Initialize your list and read in the value of n followed by n lines of commands 
  types listed above. Iterate through each command in order and perform the corresponding operation on your list.
 
 Example
-N=4
+4
 append 1
 append 2
 insert 3 1

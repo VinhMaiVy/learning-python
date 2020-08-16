@@ -9,7 +9,7 @@ If n is even and in the inclusive range of 6 to 20, print Weird
 If n is even and greater than 20, print Not Weird
 
 Input Format
-A single line containing a positive integer, n.
+A single line containing a positive integer,  n.  
 
 Constraints
  1 <= n <=100

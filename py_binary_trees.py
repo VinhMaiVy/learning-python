@@ -12,7 +12,18 @@
 7
 8
 
+6
+3
+5
+4
+7
+2
+1
+
 """
+
+
+import sys
 
 class Node:
     def __init__(self,data):
@@ -30,19 +41,21 @@ class Solution:
             else:
                 cur=self.insert(root.right,data)
                 root.right=cur
-        return root
+        return root    
 
-    def getHeight(self,root):
-        if root.right:
-            hr = self.getHeight(root.right) + 1
-        else:
-            hr = 0
-        if root.left:
-            hl = self.getHeight(root.left) + 1
-        else:
-            hl = 0
-        return max(hr,hl) 
-
+    def levelOrder(self,root):
+        queue = [root]
+        list = []
+        while len(queue)>0:
+            current = queue.pop(0) 
+            list.append(current.data)
+            if current.left:
+                queue.append(current.left)
+            if current.right:
+                queue.append(current.right)
+        print(" ".join(map(str,list)))    
+                            
+                                    
 if __name__ == '__main__':
     T=int(input())
     myTree=Solution()
@@ -50,5 +63,4 @@ if __name__ == '__main__':
     for i in range(T):
         data=int(input())
         root=myTree.insert(root,data)
-    height=myTree.getHeight(root)
-    print(height)
+    myTree.levelOrder(root)

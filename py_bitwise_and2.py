@@ -7,9 +7,45 @@
 8 5
 2 2
 
+9
+955 236
+132 107
+178 104
+394 378
+773 29
+159 117
+928 443
+250 146
+730 468
+
+
 """
 
-from itertools import combinations
+import math
+
+# function to find the position  
+# of rightmost set bit 
+def getPosOfRightmostSetBit(n): 
+  
+    return int(math.log2(n&-n)+1) 
+  
+   
+def setRightmostUnsetBit(n): 
+  
+    # if n = 0, return 1 
+    if (n == 0): 
+        return 1
+       
+    # if all bits of 'n' are set 
+    if ((n & (n + 1)) == 0):     
+        return n 
+       
+    # position of rightmost un-set bit in 'n' 
+    # passing ~n as argument 
+    pos = getPosOfRightmostSetBit(~n)     
+       
+    # set the bit at position 'pos' 
+    return ((1 << (pos - 1)) | n)
 
 if __name__ == '__main__':
     
@@ -27,7 +63,15 @@ if __name__ == '__main__':
         if (k & 1):
             print(k-1)            
         else:
-            if n > k:
-                print(k+1 & k-1)
+            m = math.log2(k)
+            if math.ceil(m) ==  math.floor(m):                
+                if (2**(m+1))-1 <= n:
+                    print(k-1)
+                else:
+                    print(k-2)
             else:                
-                print(k-1 & k-2)
+                if setRightmostUnsetBit(k-1) <= n:
+                    print(k-1)
+                else:
+                    print(k-2)
+            

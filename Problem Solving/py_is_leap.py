@@ -14,11 +14,7 @@ and 2500 are NOT leap years
 """
 
 def is_leap(year):
-    leap = False
-    if not(year % 4) and ((year % 100) or not(year % 400)):
-        leap = True
-    return leap
+    return bool(not(year % 4) and ((year % 100) or not(year % 400)))
 
-year = int(input())
-
-print(is_leap(year))
+if __name__ == '__main__':    
+    print(is_leap(int(input())))

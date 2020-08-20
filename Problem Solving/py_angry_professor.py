@@ -11,6 +11,9 @@ Input
 Output
 YES
 NO
+
+List Comprehension
+
 """
 
 # Complete the angryProfessor function below.

@@ -12,8 +12,23 @@ Output
 
 
 def kaprekarNumbers(p, q):
-     for n in range(p,q):
-         pass   
+    result = []
+    for n in range(p,q+1):
+        nlen = len(str(n))         
+        nn = n*n
+        if len(str(nn)) > nlen:
+            lnn = int(str(nn)[:-nlen])
+            rnn = int(str(nn)[-nlen:])
+        else:
+            lnn = rnn = nn
+            if n == 1:
+                result.append(n)
+        if lnn + rnn == n:
+                result.append(n)         
+    if result:
+        print(" ".join(map(str,result)))
+    else:
+        print('INVALID RANGE')
     
 if __name__ == '__main__':
     p = int(input())

@@ -13,35 +13,39 @@ Input
 Output
 5
 
+dictionary
+list comprehension
 set & combination
 bit manipulation
 
 """
 
 def winningLotteryTicket(tickets):
-    tickets_d = []
-    tickets_f = 0
-    for t in range(len(tickets)):
-        tb = ''        
-        for n in range(10):
-            if str(n) in tickets[t]:
-                tb += '1'
-            else:
-                tb += '0'
-        tb = int(tb,2)
-        if tb == 1023:
-            tickets_f +=1
-        else:
-            tickets_d.append(tb)
-                
-    # Combination n*(n-1)/2
-    result += int(len(tickets_d)*tickets_f + tickets_f*(tickets_f-1)/2)
+            
+    tickets_other = 0    
+    tickets_d = {}
+    _3FF = int('1111111111',2)
     
-    while len(tickets_d):
-        t1 = tickets_d.pop()
-        for t2 in tickets_d:
-            if t1 | t2 == 1023:
-                result += 1 
+    for t in range(_3FF+1):
+        tickets_d[t] = 0 # Set counter for each dictionary entry
+            
+    for t in range(len(tickets)):
+        tb = int("".join(['1' if str(n) in tickets[t] else '0' for n in range(10)]),2)
+        tickets_d[tb] += 1 # Increase counter for dictionary entry
+        if tb < _3FF:
+            tickets_other += 1        
+                            
+    # Combination n*(n-1)/2
+    tickets_3ff = tickets_d[_3FF]
+    tickets_d.pop(_3FF)    
+    result = int(tickets_other*tickets_3ff + tickets_3ff*(tickets_3ff-1)/2)
+
+    for t in range(_3FF):
+        if tickets_d[t] != 0:
+            for u in range(t+1,_3FF):
+                if (t | u) == _3FF:
+                    result +=  tickets_d[t]*tickets_d[u] 
+               
     return result
 
 

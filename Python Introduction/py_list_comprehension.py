@@ -7,6 +7,11 @@ along with an integer n. Print a list of all possible coordinates given by (i,j,
 is not equal to n. Here, 0<=i<=x; 0<=j<=y, 0<=j<=z. Please use list comprehensions rather than multiple loops, as a
 learning exercise.
 
+5
+5
+5
+10
+
 """
 import math
 import os
@@ -15,7 +20,7 @@ import re
 import sys
 
 def main():
-    print(list([[i, j, k] for i in range(x+1) for j in range(y+1) for k in range(z+1) if (i + j + k) != n]))
+    print([[i, j, k] for i in range(x+1) for j in range(y+1) for k in range(z+1) if (i + j + k) != n])
 
 if __name__ == '__main__':
     x = int(input())

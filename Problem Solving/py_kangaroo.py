@@ -11,6 +11,8 @@ YES
 43 2 70 2
 NO
 
+Modulo
+
 """
 
 def kangaroo(x1, v1, x2, v2):

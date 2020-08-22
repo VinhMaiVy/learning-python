@@ -1,5 +1,16 @@
 #!/bin/python3
+"""
 
+Input
+aabbbccde
+
+Output
+b 3
+a 2
+c 2
+
+
+"""
 if __name__ == '__main__':
 
     ds = {}

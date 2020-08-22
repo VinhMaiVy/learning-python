@@ -7,6 +7,11 @@
 4
 5 25 50 120
 
+6
+4
+2
+1
+
 """
 
 def climbingLeaderboard(scores, alice):

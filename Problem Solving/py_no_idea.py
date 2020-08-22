@@ -4,6 +4,15 @@
 
 No Idea
 
+Input:
+3 2
+1 5 3
+3 1
+5 7
+
+Output:
+1
+
 """
 
 if __name__ == '__main__':

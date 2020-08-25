@@ -15,10 +15,23 @@ Output:
 0
 
 Input:
+5 4
+1 2 3 4 5
+Output:
+1
+
+Input:
 5 3
 10 20 30 40 50
 Output:
 1
+
+Input:
+16 10
+10 9 8 7 6 5 4 3 2 1 1 1 7 1 1 6
+Output:
+1
+
 
 Algorithms
 Sorting
@@ -29,52 +42,47 @@ Dictionary
 
 import math
  
-
 def activityNotifications(expenditure, d):    
     
     result = 0
-    count = {}   
+    calcMedian = 0
+    max_e = max(expenditure)
     
-    SortedtrailingSpent = expenditure[0:d]
-    for a in SortedtrailingSpent:        
-        if a in count:
-            count[a] += 1
-        else:
-            count[a] = 1             
+    count = {}
 
-    i = 0 # sorting SortedtrailingSpent
-    for a in count:            
-        for c in range(count[a]):  
-            SortedtrailingSpent[i] = a
-            i += 1
+    for e in range(max_e+1):
+        count[e] = 0
+   
+    for e in expenditure[0:d]:        
+        count[e] += 1
     
-    for daySpent in range(d, len(expenditure)):        
+    if d % 2 == 0:
+        half_d = int(d/2)
+        even = True
+    else:
+        half_d = math.ceil(d/2)
+        even = False
     
-        if d == 1:
-            calcMedian = SortedtrailingSpent[0]
-        elif d % 2 == 0:        
-            calcMedian =  (SortedtrailingSpent[int(d/2-1)] + SortedtrailingSpent[int(d/2)])/2
-        else:
-            calcMedian =  SortedtrailingSpent[math.floor(d/2)]
-            
-        if expenditure[daySpent] >= 2*calcMedian:
+    for daySpent in range(d, len(expenditure)):                    
+        e = 0
+        for i in range(max_e+1):
+            e += count[i]
+            if e >= half_d:
+                break
+        calcMedian = i            
+        if (e == half_d) and even:
+            for i in range(i+1, max_e+1):
+                e += count[i]
+                if e >= half_d + 1:
+                    break
+            calcMedian = (calcMedian+i)/2
+        
+        if expenditure[daySpent] >= int(2*calcMedian):
             result += 1
         
-        if expenditure[daySpent] in count:
-            count[expenditure[daySpent]] += 1
-        else:
-            count[expenditure[daySpent]] = 1
-        
+        count[expenditure[daySpent]] += 1
         count[expenditure[daySpent-d]] -= 1
-        if count[expenditure[daySpent-d]] == 0:
-            del count[expenditure[daySpent-d]]
-        
-        i = 0 # sorting SortedtrailingSpent
-        for a in count:
-            for c in range(count[a]):  
-                SortedtrailingSpent[i] = a
-                i += 1
-    
+                            
     return result
 
 

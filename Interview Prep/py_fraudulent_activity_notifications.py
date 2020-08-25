@@ -49,8 +49,7 @@ def activityNotifications(expenditure, d):
     max_e = max(expenditure)
     
     count = dict(enumerate([0]*(max_e+1)))    
-    for e in expenditure[0:d]:        
-        count[e] += 1
+    for e in expenditure[0:d]: count[e] += 1
     
     if d % 2 == 0:
         half_d = int(d/2)
@@ -63,18 +62,15 @@ def activityNotifications(expenditure, d):
         e = 0
         for i in range(max_e+1):
             e += count[i]
-            if e >= half_d:
-                break
+            if e >= half_d: break
         calcMedian = i            
         if (e == half_d) and even:
             for i in range(i+1, max_e+1):
                 e += count[i]
-                if e >= half_d + 1:
-                    break
+                if e >= half_d + 1: break
             calcMedian = (calcMedian+i)/2
         
-        if expenditure[daySpent] >= int(2*calcMedian):
-            result += 1
+        if expenditure[daySpent] >= int(2*calcMedian): result += 1
         
         count[expenditure[daySpent]] += 1
         count[expenditure[daySpent-d]] -= 1

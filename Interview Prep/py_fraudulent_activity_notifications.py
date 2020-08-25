@@ -30,7 +30,7 @@ Input:
 16 10
 10 9 8 7 6 5 4 3 2 1 1 1 7 1 1 6
 Output:
-1
+2
 
 
 Algorithms
@@ -48,11 +48,7 @@ def activityNotifications(expenditure, d):
     calcMedian = 0
     max_e = max(expenditure)
     
-    count = {}
-
-    for e in range(max_e+1):
-        count[e] = 0
-   
+    count = dict(enumerate([0]*(max_e+1)))    
     for e in expenditure[0:d]:        
         count[e] += 1
     

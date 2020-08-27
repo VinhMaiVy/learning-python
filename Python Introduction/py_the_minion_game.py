@@ -4,10 +4,10 @@
 Regular Expression
 Strings manipulation
 
-Input
+Input:
 BANANA
 
-Output
+Output:
 Stuart 12
 
 

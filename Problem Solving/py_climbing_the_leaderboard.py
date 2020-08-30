@@ -40,3 +40,5 @@ if __name__ == '__main__':
     result = climbingLeaderboard(scores, alice)
     print('\n'.join(map(str, result)))
     
+
+    

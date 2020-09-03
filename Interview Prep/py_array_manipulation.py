@@ -65,7 +65,7 @@ import random
 import re
 import sys
 
-from collections import Counter
+from collections import defaultdict
 
 def arrayManipulation1(n, queries):    
     result = 0
@@ -79,6 +79,7 @@ def arrayManipulation1(n, queries):
                 result = array[i]
     # print(array)                  
     return result
+
 """
 Given a range[a, b] and a value k we need to add k to all the numbers whose indices are in the range from [a, b].
 We can do an O(1) update by adding  to index a and add -k to index b+1.
@@ -96,7 +97,7 @@ We can calculate all prefix sums as well as maximum prefix sum in O(n) time whic
 def arrayManipulation(n, queries):
     arrSum = 0
     maxSum = 0
-    c = Counter()
+    c = defaultdict(int)
     
     for a,b,k in queries:
         c[a]  +=k

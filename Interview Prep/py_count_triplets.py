@@ -52,7 +52,7 @@ def countTriplets(arr, r):
     arr_dict = OrderedDict()
     for i in arr:
         li = math.log(i,r)
-        if li.is_integer():
+        if r**li - i < 0.0001:
             li = int(li)
             if li in arr_dict:
                 arr_dict[li] += 1

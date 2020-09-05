@@ -22,24 +22,27 @@ import os
 import random
 import re
 import sys
-
+from collections import Counter
 
 def minimumBribes(q):
-    result = 0
-    len_a = len(arr)    
-    for n in range(1,len_a+1):            
-        if (arr[n] == n):
-            continue
-        else:
-            c = arr[n]
-            max = 0
-            while (c != n):                
-                c = c+1 if c>n else c-1 
-                result +=1
+    result = 0    
+    q = set(q)
+    len_q = len(q)
+        
+    for n in range(len_q):
+        max = 0            
+        for m in range(n,len_q):
+            if q[n] > q[m]:
+                result += 1
                 max += 1
-            if max > 2:
-                return 'Too Chaotic'
-    return result
+                if max > 2:                    
+                    break
+        if max > 2:
+            break   
+    if max > 2:        
+        print('Too chaotic')
+    else:
+        print(result)
 
 if __name__ == '__main__':
     t = int(input())
@@ -48,6 +51,5 @@ if __name__ == '__main__':
         n = int(input())
 
         q = list(map(int, input().rstrip().split()))
-        print(q)
-        
+        #print(q)        
         minimumBribes(q)

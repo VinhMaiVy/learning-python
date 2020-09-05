@@ -29,7 +29,7 @@ if __name__ == '__main__':
     elif n>2:
         print("{:.1f}".format( float( (sa[math.floor(n/2)]) )))
     else:
-        print("{:.1f}".format( float( (sa[0] ) )))
+        print("{:.1f}".format( float( sa[0] )))
     
     ca = Counter(a)
     max_ca = max(ca.values())

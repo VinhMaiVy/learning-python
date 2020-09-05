@@ -1,7 +1,8 @@
 #!/bin/python3
 
 """
-Python
+Dictionary
+Dict.get()
 
 Input:
 4 2
@@ -45,24 +46,19 @@ def countTriplets1(arr, r):
     return result
 
 
-from collections import OrderedDict
 def countTriplets(arr, r):
     result = 0
+    dict = {}
+    dictPairs = {}
 
-    arr_dict = OrderedDict()
-    for i in arr:
-        li = math.log(i,r)
-        if r**li - i < 0.0001:
-            li = int(li)
-            if li in arr_dict:
-                arr_dict[li] += 1
-            else:
-                arr_dict[li] = 1
-                
-    print(arr_dict)
-                    
+    for i in reversed(arr):
+        if i*r in dictPairs:
+            result += dictPairs[i*r]
+        if i*r in dict:
+            dictPairs[i] = dictPairs.get(i, 0) + dict[i*r]
+        dict[i] = dict.get(i, 0) + 1
+
     return result
-
 
 if __name__ == '__main__':
 

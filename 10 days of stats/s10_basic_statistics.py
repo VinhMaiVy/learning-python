@@ -26,11 +26,9 @@ if __name__ == '__main__':
     sa = sorted(a)
     if (n % 2) == 0 and n>1:
         print("{:.1f}".format( float( (sa[n//2]+sa[n//2-1])/2 ) ))
-    elif n>2:
-        print("{:.1f}".format( float( (sa[math.floor(n/2)]) )))
     else:
-        print("{:.1f}".format( float( sa[0] )))
-    
+        print("{:.1f}".format( float( (sa[math.floor(n/2)]) )))
+        
     ca = Counter(a)
     max_ca = max(ca.values())
     print(min([n for n in ca if ca[n] == max_ca]))

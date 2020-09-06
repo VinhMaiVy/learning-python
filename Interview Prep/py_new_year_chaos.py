@@ -25,25 +25,30 @@ import sys
 from collections import Counter
 
 def minimumBribes(q):
-    result = 0    
-    q = set(q)
+    result = 0        
     len_q = len(q)
-        
+    dic_q = dict()    
+    
     for n in range(len_q):
-        max = 0            
-        for m in range(n,len_q):
-            if q[n] > q[m]:
-                result += 1
-                max += 1
-                if max > 2:                    
-                    break
-        if max > 2:
-            break   
-    if max > 2:        
-        print('Too chaotic')
-    else:
+        dic_q[q[n]] = n
+                
+    for n in range(len_q):
+        if q[n]-1>0:
+            if dic_q[q[n]-1] > n:
+                result +=1
+        if q[n]-2>0:
+            if dic_q[q[n]-2] > n:
+                result +=1
+        if q[n]-3>0:
+            if dic_q[q[n]-3] > n:
+                result = 0
+                break    
+    if result:
         print(result)
-
+    else:
+        print('Too chaotic')
+                            
+    
 if __name__ == '__main__':
     t = int(input())
 

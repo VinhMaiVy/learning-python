@@ -41,3 +41,4 @@ if __name__ == '__main__':
             if (c[0] & c[1]) < k:
                 max_c = max(c[0] & c[1], max_c)            
         print(max_c)
+

@@ -19,7 +19,6 @@ import random
 import re
 import sys
 
-# Complete the maximumToys function below.
 def maximumToys(prices, k):    
     result = 0
     buy = 0        

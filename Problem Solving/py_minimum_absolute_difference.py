@@ -21,8 +21,15 @@ import sys
 from collections import Counter
 
 def minimumAbsoluteDifference(arr):
-    
-    pass
+    s_arr = sorted(arr)
+    result = float('inf')    
+    current = s_arr[0]
+    for i in range(1,len(s_arr)):
+        diff = abs(current - s_arr[i])        
+        if  diff < result:
+            result = diff
+        current = s_arr[i]     
+    return result
 
 if __name__ == '__main__':
     

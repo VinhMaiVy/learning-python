@@ -7,12 +7,12 @@ import re
 import sys
 
 
-def avg(*n):
+def avg(n):
     return sum(n)/len(n)
 
 if __name__ == '__main__':
         
     nums = list(map(int, input().split()))
-    res = avg(*nums)
+    res = avg(nums)
     
     print('%.2f' % res + '\n')

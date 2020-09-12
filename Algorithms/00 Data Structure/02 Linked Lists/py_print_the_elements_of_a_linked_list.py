@@ -56,6 +56,7 @@ def printLinkedList(head):
     while node:
         print(node.data)
         node = node.next
+
         
 if __name__ == '__main__':
     llist_count = int(input())

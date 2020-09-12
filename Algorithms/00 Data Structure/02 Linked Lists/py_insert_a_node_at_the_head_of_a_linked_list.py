@@ -4,14 +4,19 @@
 Linked List
 
 Input:
-2
-16
-13
+5
+383
+484
+392
+975
+321
 
 Output:
-16
-13
-
+321
+975
+392
+484
+383
 
 """
 
@@ -32,17 +37,13 @@ class SinglyLinkedList:
         self.head = None
         self.tail = None
 
-    def insert_node(self, node_data):
-        node = SinglyLinkedListNode(node_data)
+def print_singly_linked_list(node):
+    while node:
+        print(str(node.data))
+        node = node.next
 
-        if not self.head:
-            self.head = node
-        else:
-            self.tail.next = node
+# Complete the insertNodeAtHead function below.
 
-        self.tail = node
-
-# Complete the printLinkedList function below.
 #
 # For your reference:
 #
@@ -51,20 +52,28 @@ class SinglyLinkedList:
 #     SinglyLinkedListNode next
 #
 #
-def printLinkedList(head):
-    node = head
-    while node:
-        print(node.data)
-        node = node.next
-
+def insertNodeAtHead(llist, data):
         
+    node = SinglyLinkedListNode(data)
+
+    if llist:            
+        node.next = llist
+            
+    return(node)
+
+
 if __name__ == '__main__':
+    
+
     llist_count = int(input())
 
     llist = SinglyLinkedList()
 
     for _ in range(llist_count):
         llist_item = int(input())
-        llist.insert_node(llist_item)
-
-    printLinkedList(llist.head)
+        llist_head = insertNodeAtHead(llist.head, llist_item)
+        llist.head = llist_head
+    
+    print_singly_linked_list(llist.head)
+    print('\n')
+        

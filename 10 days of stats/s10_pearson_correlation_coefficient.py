@@ -13,11 +13,18 @@ Output:
 
 """
 
-def mean(a):
-    return sum(a)/(len(a))
+def mean(x):
+    return sum(x)/(len(x))
 
-def stddev(a):    
-    return (sum([(n-mean(a))**2 for n in a])/n)**0.5
+def stddev(x):
+    mx = mean(x)    
+    return (sum([(i-mx)**2 for i in x])/len(x))**0.5
+
+def pearson_coef(x,y):
+    mx = mean(x)
+    my = mean(y)
+    n = len(x)
+    return sum([(x[i] - mx)*(y[i] - my) for i in range(n)]) / ( n * stddev(x) * stddev(y) )
 
     
 if __name__ == '__main__':
@@ -26,9 +33,6 @@ if __name__ == '__main__':
     
     x, y = list(map(float, input().rstrip().split())), list(map(float, input().rstrip().split()))        
 
-    mx = mean(x)
-    my = mean(y)
-            
-    result = sum([(x[i] - mx)*(y[i] - my) for i in range(n)]) / (n*stddev(x)*stddev(y))
+    result = pearson_coef(x,y)
 
     print("{:.3f}".format( result ))

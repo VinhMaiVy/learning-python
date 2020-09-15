@@ -8,7 +8,7 @@ Input:
 1 2 5 3 4 6
 
 Output:
-
+1 2 3 4 5 6
 
 """
 
@@ -56,12 +56,40 @@ self.right (the right child of the node)
 self.info (the value of the node)
 """
 def inOrder(root):
-    
-    current = root
-    # current.info
-    # current.left
-    # current.right
-    
+
+    # Set current to root of binary tree 
+    current = root  
+    stack = [] # initialize stack 
+    l_info = []
+    done = 0 
+      
+    while True: 
+          
+        # Reach the left most Node of the current Node 
+        if current: 
+              
+            # Place pointer to a tree node on the stack  
+            # before traversing the node's left subtree 
+            stack.append(current) 
+          
+            current = current.left  
+  
+          
+        # BackTrack from the empty subtree and visit the Node 
+        # at the top of the stack; however, if the stack is  
+        # empty you are done 
+        elif stack: 
+            current = stack.pop() 
+            l_info.append(current.info) 
+          
+            # We have visited the node and its left  
+            # subtree. Now, it's right subtree's turn 
+            current = current.right  
+  
+        else: 
+            break
+        
+    print(' '.join([str(i) for i in sorted(l_info)]))
             
 if __name__ == '__main__':
     tree = BinarySearchTree()

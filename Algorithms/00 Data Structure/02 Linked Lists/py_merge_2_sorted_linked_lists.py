@@ -122,6 +122,7 @@ def mergeLists2(head1, head2):
                         
     return(head1)
 
+
 def mergeLists(head1, head2):
   if head1 is None and head2 is None:
     return None

@@ -10,6 +10,15 @@ Input:
 Output:
 1 2 3 4 5 6
 
+
+Input:
+7
+5 2 1 7 3 4 6
+
+Output:
+1 2 3 4 5 6 7
+
+
 """
 
 
@@ -74,7 +83,6 @@ def inOrder2(root):
           
             current = current.left  
   
-          
         # BackTrack from the empty subtree and visit the Node 
         # at the top of the stack; however, if the stack is  
         # empty you are done 
@@ -89,44 +97,13 @@ def inOrder2(root):
         else: 
             break
         
-    print(' '.join([str(i) for i in sorted(l_info)]))
+    print(' '.join([str(i) for i in l_info]))
 
 def inOrder(root):
-
-    # Set current to root of binary tree 
-    current = root  
-    stack = [current] # initialize stack 
-    l_info = []
-    done = 0 
-      
-    while True: 
-          
-        # Reach the left most Node of the current Node 
-        if current: 
-              
-            # Place pointer to a tree node on the stack  
-            # before traversing the node's left subtree 
-            stack.append(current) 
-          
-            current = current.left  
-  
-          
-        # BackTrack from the empty subtree and visit the Node 
-        # at the top of the stack; however, if the stack is  
-        # empty you are done 
-        elif stack: 
-            current = stack.pop() 
-            l_info.append(current.info) 
-          
-            # We have visited the node and its left  
-            # subtree. Now, it's right subtree's turn 
-            current = current.right  
-  
-        else: 
-            break
-        
-    print(' '.join([str(i) for i in sorted(l_info)]))
-            
+    if root:
+        inOrder(root.left)        
+        inOrder(root.right)
+        print(root.info, end=" ")
 
             
 if __name__ == '__main__':
@@ -138,4 +115,4 @@ if __name__ == '__main__':
     for i in range(t):
         tree.create(arr[i])
     
-    inOrder(tree.root)
+    inOrder2(tree.root)

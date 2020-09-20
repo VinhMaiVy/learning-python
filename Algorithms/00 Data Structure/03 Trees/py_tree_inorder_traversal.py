@@ -2,6 +2,7 @@
 
 """
 Trees
+Recursion
 
 Input:
 6
@@ -100,10 +101,11 @@ def inOrder2(root):
     print(' '.join([str(i) for i in l_info]))
 
 def inOrder(root):
-    if root:
+    if root:        
         inOrder(root.left)        
         inOrder(root.right)
         print(root.info, end=" ")
+        
 
             
 if __name__ == '__main__':

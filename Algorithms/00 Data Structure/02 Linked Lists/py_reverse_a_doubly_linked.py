@@ -2,6 +2,7 @@
 
 """
 Doubly Linked List
+Recursion
 
 Input:
 1
@@ -86,6 +87,7 @@ def reverse2(head):
     if not head.prev:
         return head
     return reverse2(head.prev)
+
 
 def reverse3 (head):
     temp = head

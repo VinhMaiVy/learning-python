@@ -2,6 +2,7 @@
 
 """
 Binary Search Tree
+Recursion
 
 Input:
 6
@@ -103,9 +104,10 @@ def lca(root, v1, v2):
     # The value of a common ancestor has to always be between the two values in question.    
     if root.info < v1 and root.info < v2:
         return lca(root.right, v1, v2)
-    if root.info > v1 and root.info > v2:
+    elif root.info > v1 and root.info > v2:
         return lca(root.left, v1, v2)
-    return root
+    else:
+        return root
 
 if __name__ == '__main__':
     tree = BinarySearchTree()

@@ -46,7 +46,6 @@ class DoublyLinkedList:
             self.tail.next = node
             node.prev = self.tail
 
-
         self.tail = node
 
 def print_doubly_linked_list(node):

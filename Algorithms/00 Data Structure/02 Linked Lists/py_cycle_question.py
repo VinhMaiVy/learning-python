@@ -41,7 +41,6 @@ class SinglyLinkedList:
         else:
             self.tail.next = node
 
-
         self.tail = node
 
 def print_singly_linked_list(node):    

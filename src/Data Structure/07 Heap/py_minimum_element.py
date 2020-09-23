@@ -2,7 +2,8 @@
 
 """
 Python
-
+    Dictionary
+    
 Input:
 10
 1 97

@@ -2,13 +2,15 @@
 
 """
 Python
+    Priority-Queue
+    Binary Heap Tree
 
 Input:
 6 12
 1 2 3 9 10 15
 
 Output:
-2
+3
 
 Input:
 10 7
@@ -23,7 +25,6 @@ Input:
 import os
 import sys
 import math
-
 
 class BinaryHeapTree(object):
 
@@ -133,6 +134,51 @@ def cookies(k, A):
     else:
         return -1
 
+from collections import deque
+
+def combine(a, b):
+    return a + b * 2
+
+def cookies2(k, A):
+    result = 0
+    queue = deque(sorted(A))
+    new_queue = deque()
+    top_two = []
+    
+    while queue:
+        if queue and new_queue and len(queue) == 1:
+            while new_queue:
+                #print('adding new at the end:', new_queue[0])
+                queue.append(new_queue.popleft())
+
+        if queue and new_queue and new_queue[0] <= queue[0]:
+            #print('adding to queue:', new_queue[0])
+            queue.appendleft(new_queue.popleft())
+
+        if queue and len(top_two) == 0 and k <= queue[0]:
+            break
+
+        cookie = queue.popleft()
+        #print('cookie:', cookie)
+        top_two.append(cookie)
+
+        if len(top_two) == 2:
+            #print('combine:', top_two[0], top_two[1])
+            new_cookie = combine(top_two[0], top_two[1])
+            #print('new cookie:', new_cookie)
+            top_two = []
+            new_queue.append(new_cookie)
+            result += 1
+    
+    while new_queue:
+        queue.append(new_queue.popleft())
+    
+    #print('final:', queue)
+    if any(x < k for x in queue):
+        return -1
+    else:
+        return result    
+
 if __name__ == '__main__':
     
     nk = input().split()
@@ -140,5 +186,5 @@ if __name__ == '__main__':
     k = int(nk[1])
     A = list(map(int, input().rstrip().split()))
 
-    result = cookies(k, A)
+    result = cookies2(k, A)
     print(str(result))

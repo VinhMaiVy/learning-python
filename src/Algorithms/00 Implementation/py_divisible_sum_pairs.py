@@ -29,12 +29,9 @@ import re
 import sys
 
 from itertools import combinations
-from functools import reduce
-from collections import Counter
 
-# Complete the divisibleSumPairs function below.
 def divisibleSumPairs(n, k, ar):     
-    return Counter(map(lambda x:(x[0]+x[1])%k, list(combinations(ar,2))))[0] 
+    return len([i for i in (map(lambda x:(x[0]+x[1])%k, list(combinations(ar,2)))) if i==0]) 
     
 if __name__ == '__main__':
 

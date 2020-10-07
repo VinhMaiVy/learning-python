@@ -12,7 +12,7 @@ a 1
 r 1  
 r 2  
 r 1
-r 1
+
 
 Output:
 Wrong!  
@@ -25,16 +25,19 @@ Wrong!
 
 """
 import math
-from random import Random
-# from random import random
+
+# from random import Random
+from random import random
+# from random import randint
 
 
 class TreapNode:
 
     def __init__(self, key, parent=None, left=None, right=None):
-        global R
+        # global P
         self.key = key
-        self.priority = R.random()
+        # self.priority = P.pop(0)
+        self.priority = random()
         self.cnt = 1
         self.size = 1
         self.parent = parent
@@ -42,10 +45,10 @@ class TreapNode:
         self.right = right
 
     def __repr__(self):
-        return str((self.key, int(self.priority * 100), self.size))
+        return str((self.key, self.size))
 
     def __str__(self):
-        return str((self.key, self.size))
+        return str((self.key, int(self.priority), self.size))
         # return str(self.size)
 
     def size(self, node):
@@ -72,7 +75,6 @@ class Treap:
         self.root = None
 
     def __repr__(self):
-        """Return a string representation of treap."""
         lines = []
         nodes = [(self.root, 0)]
         while nodes:
@@ -94,26 +96,36 @@ class Treap:
         return res
 
     def __str__(self):
-        return self._str(self.root) if (self.root is not None) else ""
+        return self._str(self.root)
 
     def __len__(self):
         return self.root.size
+
+    '''
+     ****     Get items from Treap   ****
+    '''
 
     def _getitem(self, root, index) -> int:
         if (root.left is not None):
             if index <= root.left.size:
                 return self._getitem(root.left, index)
+
             index -= root.left.size
 
         # root.cnt
-        if index in [1 + _ for _ in range(root.cnt)]:
+        if index in range(1, root.cnt + 1):
             return root.key
 
+        index -= root.cnt
+
         # definitely to the right
-        return self._getitem(root.right, index - 1)
+        return self._getitem(root.right, index)
 
     def __getitem__(self, index):
-        return self._getitem(self.root, index + 1)
+        if 0 <= index < self.root.size:
+            return self._getitem(self.root, index + 1)
+        else:
+            return None
 
     def _pivot_up(self, node):
         parent = node.parent
@@ -121,8 +133,12 @@ class Treap:
             return
 
         if parent.left == node:
+
             """
             Given the following binary search tree:
+
+                   GP
+                   |
                    P
                   / \
                 (N)  P.right
@@ -132,6 +148,8 @@ class Treap:
             Imagine we need to pivot 3 and 5 (to maintain the heap
             property). The resulting tree will look like:
 
+                   GP
+                   |
                   (N)
                   / \
             N.Left   P
@@ -139,8 +157,9 @@ class Treap:
               N.right  P.right
 
             """
+
             node.right, parent.left = parent, node.right
-            if parent.left:  # node.right -> P.left
+            if parent.left:
                 parent.left.parent = parent
 
             if (parent.right is not None):
@@ -154,6 +173,7 @@ class Treap:
                 parent.size -= node.cnt
 
         else:
+
             """
             Given the following binary search tree:
 
@@ -203,7 +223,7 @@ class Treap:
             self.root = node
 
     def _prioritize(self, node):
-        while node.parent and (node.parent.priority < node.priority):
+        while node.parent and node.parent.priority < node.priority:
             self._pivot_up(node)
 
     def _find_node(self, key, node, parent=None):
@@ -215,7 +235,12 @@ class Treap:
             elif (key > node.key):
                 node, parent = node.right, node
 
+    def __contains__(self, key):
+        node = self._find_node(key, self.root)[0]
+        return node is not None
+
     def insert(self, key):
+        # Search Key first
         node, parent = self._find_node(key, self.root)
         if node is None:
             node = TreapNode(key)
@@ -234,14 +259,12 @@ class Treap:
             node.size += 1
             node.inc_parent_size(node)
 
-    def __contains__(self, key):
-        node = self._find_node(key, self.root)[0]
-        return node is not None
-
     def delete(self, key):
+        # Search Key first
         node, parent = self._find_node(key, self.root)
         if (node is None):
-            print('Wrong!')
+            # print('Wrong!')
+            print('Key not found. Can not delete key\n')
         elif node.cnt > 1:
             node.cnt -= 1
             node.size -= 1
@@ -273,6 +296,11 @@ class Treap:
                     child.parent = node.parent
             del node
 
+    def _traverse(self, node, attr, parent=None):
+        while getattr(node, attr):
+            node, parent = getattr(node, attr), node
+        return node, parent
+
     def min(self):
         if self.root is None:
             return None
@@ -285,29 +313,20 @@ class Treap:
         node, _ = self._traverse(self.root, 'right')
         return node.key
 
+    def median(self) -> float:
+        n = self.root.size
+        if (n % 2) == 0:
+            return (self._getitem(self.root, n // 2 + 1) +
+                    self._getitem(self.root, n // 2)) / 2
+        else:
+            return self._getitem(self.root, math.floor(n / 2) + 1)
+
     def clear(self):
         self.root = None
 
-    def _traverse(self, node, attr, parent=None):
-        while getattr(node, attr):
-            node, parent = getattr(node, attr), node
-        return node, parent
-
-
-def median(t) -> float:
-        n = len(t)
-        if (n % 2) == 0:
-            return (t[n // 2] + t[n // 2 - 1]) / 2
-        else:
-            m = math.floor(n / 2)
-            if n > 10:
-                print('Accessing:', m - 1, t[m - 1])
-                print('Accessing:', m + 1, t[m + 1])
-            return t[m]
-
 
 if __name__ == '__main__':
-    R = Random(0)
+
     N = int(input())
     T = Treap()
     for i in range(0, N):
@@ -316,8 +335,8 @@ if __name__ == '__main__':
         k = int(k)
         if c == 'a':
             T.insert(k)
-            x = median(T)
-            print('T:', T.root.size, "M: {1:0.{0}f}".format(int(not float(x).is_integer()), x))
+            x = T.median()
+            print("{1:0.{0}f}".format(int(not float(x).is_integer()), x))
         elif c == 'r':
             if T.root is None:
                 print('Wrong!')
@@ -325,8 +344,8 @@ if __name__ == '__main__':
                 if k in T:
                     T.delete(k)
                     if T.root is not None:
-                        x = median(T)
-                        print('T:', T.root.size , "M: {1:0.{0}f}".format(int(not float(x).is_integer()), x))
+                        x = T.median()
+                        print("{1:0.{0}f}".format(int(not float(x).is_integer()), x))
                     else:
                         print('Wrong!')
                 else:

@@ -162,20 +162,20 @@ def split(root: Treap, index: int, add=0) -> (Treap, Treap):
     if index < cur_ind:
         resleft, root.left = split(root.left, index, add)
         root.cnt -= resleft.cnt if (resleft is not None) else 0
-        upd_maximum(resleft)
+        # upd_maximum(resleft)
         upd_maximum(root)
         return resleft, root
     elif index > cur_ind:
         root.right, resright = split(root.right, index, cur_ind + 1)
         root.cnt -= resright.cnt if (resright is not None) else 0
-        upd_maximum(resright)
+        # upd_maximum(resright)
         upd_maximum(root)
         return root, resright
     else:
         resleft = root.left
         root.left = None
         root.cnt -= resleft.cnt if (resleft is not None) else 0
-        upd_maximum(resleft)
+        # upd_maximum(resleft)
         upd_maximum(root)
         return resleft, root
 

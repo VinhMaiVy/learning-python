@@ -1,0 +1,52 @@
+{
+	"statusCode": 200, 
+	"body": 
+		{
+			"body-json": {}, 
+			"params": 
+				{
+					"path": {}, 
+					"querystring": {}, 
+					"header": 
+						{
+							"accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9", 
+							"accept-encoding": "gzip, deflate, br", 
+							"accept-language": "en-US,en;q=0.9,vi-VN;q=0.8,vi;q=0.7,fr;q=0.6", 
+							"Host": "nizdk9fjdc.execute-api.us-east-2.amazonaws.com", 
+							"referer": "https://us-east-2.console.aws.amazon.com/", 
+							"sec-fetch-dest": "document", 
+							"sec-fetch-mode": "navigate", 
+							"sec-fetch-site": "cross-site", 
+							"sec-fetch-user": "?1", 
+							"upgrade-insecure-requests": "1", 
+							"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.75 Safari/537.36", 
+							"X-Amzn-Trace-Id": "Root=1-5f874d4b-3e3541a618d9448c022f72b9", 
+							"X-Forwarded-For": "108.253.242.242", 
+							"X-Forwarded-Port": "443", 
+							"X-Forwarded-Proto": "https"
+						}
+					}, 
+			"stage-variables": {}, 
+			"context": 
+				{
+					"account-id": "", 
+					"api-id": "nizdk9fjdc", 
+					"api-key": "", 
+					"authorizer-principal-id": "", 
+					"caller": "", 
+					"cognito-authentication-provider": "", 
+					"cognito-authentication-type": "", 
+					"cognito-identity-id": "", 
+					"cognito-identity-pool-id": "", 
+					"http-method": "GET", 
+					"stage": "beta", 
+					"source-ip": "108.253.242.242", 
+					"user": "", 
+					"user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.75 Safari/537.36", 
+					"user-arn": "", 
+					"request-id": "0abd5509-eb6f-40c5-a440-26c46ec8e7c4", 
+					"resource-id": "zcj5t5", 
+					"resource-path": "/get-range"
+				}
+			}
+	}

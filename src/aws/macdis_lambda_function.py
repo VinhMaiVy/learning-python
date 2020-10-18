@@ -75,7 +75,7 @@ def update_mac_addr_bank(reserve: int, userid: str, dynamodb=None) -> str:
     if not dynamodb:
         dynamodb = boto3.resource('dynamodb')
 
-    tstamp = str(datetime.now())
+    tstamp = str(datetime.utcnow().isoformat())
 
     '''
     mac_addr_bank SCAN
@@ -144,7 +144,7 @@ def insert_mac_addr_bank(addr_start: str, count: int,
     if not dynamodb:
         dynamodb = boto3.resource('dynamodb')
 
-    tstamp = str(datetime.now())
+    tstamp = str(datetime.utcnow().isoformat())
 
     table = dynamodb.Table(MAC_ADDR_BANK_TABLE)
 
@@ -183,7 +183,7 @@ def insert_mac_addr_log(userid: str, command: str, addr_start: str,
     if not dynamodb:
         dynamodb = boto3.resource('dynamodb')
 
-    tstamp = str(datetime.now())
+    tstamp = str(datetime.utcnow().isoformat())
 
     table = dynamodb.Table(MAC_ADDR_LOG_TABLE)
     response = table.put_item(
@@ -237,6 +237,7 @@ def query_mac_addr_logs(userid: str, dynamodb=None):
 def create_mac_addr_bank_table(dynamodb=None):
 
     global MAC_ADDR_BANK_TABLE
+    global RETURNOK
 
     if not dynamodb:
         dynamodb = boto3.resource('dynamodb')
@@ -272,12 +273,13 @@ def create_mac_addr_bank_table(dynamodb=None):
     except Exception as err:
         return err
     else:
-        return 0
+        return RETURNOK
 
 
 def create_mac_addr_log_table(dynamodb=None):
 
     global MAC_ADDR_LOG_TABLE
+    global RETURNOK
 
     if not dynamodb:
         dynamodb = boto3.resource('dynamodb')
@@ -313,7 +315,7 @@ def create_mac_addr_log_table(dynamodb=None):
     except Exception as err:
         return err
     else:
-        return 0
+        return RETURNOK
 
 
 def lambda_handler(event, context):
@@ -337,11 +339,7 @@ def lambda_handler(event, context):
 
     stage = context['stage']
     userid = context['source-ip']
-
-    if 'command' in querystring:
-        command = querystring['command']
-    else:
-        command = 'QUERY_MAC'
+    resource_path = context['resource-path']
 
     if 'addr_start' in querystring:
         addr_start = querystring['addr_start']
@@ -353,7 +351,9 @@ def lambda_handler(event, context):
     else:
         count = 0
 
-    tstart = str(datetime.now())
+    command = resource_path[1:]
+
+    tstart = str(datetime.utcnow().isoformat())
 
     if stage == 'beta':
         MAC_ADDR_BANK_TABLE = 'mac_addr_bank.beta'
@@ -368,18 +368,18 @@ def lambda_handler(event, context):
         MAC_ADDR_BANK_TABLE = 'mac_addr_bank.test'
         MAC_ADDR_LOG_TABLE = 'mac_addr_log.test'
 
-    if command == 'RESERVE_MAC':
+    if command == 'reserve-mac':
         if count:
             addr_start = update_mac_addr_bank(count, userid)
         if addr_start != '00:00:00:00:00:00:00:00':
-            msg = "Success"
+            msg = "MAC address range reserved successfully."
             ret = RETURNOK
         else:
-            msg = "Failure"
+            msg = "MAC address range reserve failure."
             ret = ERROR400
 
         insert_mac_addr_log(userid, command, addr_start, count, ret)
-        tend = str(datetime.now())
+        tend = str(datetime.utcnow().isoformat())
         return {
                 'statusCode': ret,
                 'body': {"Msg": msg, "command": command,
@@ -387,20 +387,20 @@ def lambda_handler(event, context):
                          "tstart": tstart, "tend": tend}
                 }
 
-    elif command in ('RETURN_MAC', 'SET_MAC'):
+    elif command in ('return-mac', 'set-mac'):
         if addr_start and count:
             ret = insert_mac_addr_bank(addr_start, count, userid)
         else:
             ret = ERROR400
 
         if (ret == RETURNOK):
-            msg = "Success"
+            msg = "MAC address range set/returned successfully."
         else:
             ret = ERROR400
-            msg = "Failure"
+            msg = "MAC address range set/returned failed."
 
         insert_mac_addr_log(userid, command, addr_start, count, ret)
-        tend = str(datetime.now())
+        tend = str(datetime.utcnow().isoformat())
         return {
                 'statusCode': ret,
                 'body': {"Msg": msg, "command": command,
@@ -408,45 +408,44 @@ def lambda_handler(event, context):
                          "tstart": tstart, "tend": tend}
                 }
 
-    elif command == 'QUERY_MAC':
+    elif command == 'query-mac':
         sum_remain = query_mac_addr_bank()
-        tend = str(datetime.now())
+        tend = str(datetime.utcnow().isoformat())
         return {
                 'statusCode': RETURNOK,
                 'body': {"command": command, "remain": sum_remain,
                          "tstart": tstart, "tend": tend}
                 }
 
-    elif command == 'QUERY_LOG':
+    elif command == 'query-log':
         logs = query_mac_addr_logs(userid)
-        # return json.dumps(logs, cls=CustomJsonEncoder, sort_keys=True)
-        # return pprint(logs)
         return logs
 
-    elif command == 'CREATE_TABLE':
-        tstart = str(datetime.now())
+    elif command == 'create-table':
+        tstart = str(datetime.utcnow().isoformat())
         ret1 = create_mac_addr_bank_table()
-        tend = str(datetime.now())
-        if ret1:
+        tend = str(datetime.utcnow().isoformat())
+        if ret1 == RETURNOK:
             return {
                         'statusCode': ERROR400,
                         'body': {"Msg": ret1, "command": command,
                                  "tstart": tstart, "tend": tend}
                     }
         ret2 = create_mac_addr_log_table()
-        tend = str(datetime.now())
-        if ret2:
+        tend = str(datetime.utcnow().isoformat())
+        if ret2 == RETURNOK:
             return {
                         'statusCode': ERROR400,
                         'body': {"Msg": ret2, "command": command,
                                  "tstart": tstart, "tend": tend}
                     }
 
-        tend = str(datetime.now())
+        tend = str(datetime.utcnow().isoformat())
         return {
                     'statusCode': RETURNOK,
-                    'body': {"Msg": "Success", "command": command,
-                             "tstart": tstart, "tend": tend}
+                    'body': {"Msg": "Table created successfully.",
+                             "command": command, "tstart": tstart,
+                             "tend": tend}
                 }
 
 
@@ -470,25 +469,26 @@ if __name__ == '__main__':
     event = {
         'params': {
                 'querystring': {
-                    #    'command': 'SET_MAC',
-                    #    'command': 'RESERVE_MAC',
-                    #    'command': 'QUERY_MAC',
-                    #    'command': 'RETURN_MAC',
-                    #    'command': 'QUERY_LOG',
-                    #    'command': 'CREATE_TABLE',
-                    'command': 'RESERVE_MAC',
                     #    'addr_start': 'C4:98:A6:00:00:00:00:00',
                     #    'addr_start': 'C4:98:A8:00:00:00:00:00',
                     #    'addr_start': 'C4:98:A6:00:00:00:00:00',
+                    'addr_start': 'C4:98:A5:00:00:00:00:00',
                     'count': 10
                     }
         },
         'context': {
             'source-ip': '108.253.242.242',
-            'stage': 'test'
+            'stage': 'test',
             #    'stage': 'beta'
             #    'stage': 'test'
             #    'stage': 'prod'
+            #    "resource-path": "/query-mac"
+            #    "resource-path": "/reserve-mac"
+            #    "resource-path": "/return-mac"
+            #    "resource-path": "/set-mac"
+            #    "resource-path": "/query-log"
+            #    "resource-path": "/create-table"
+            "resource-path": "/query-mac"
             }
         }
     context = ''

@@ -4,11 +4,9 @@ import re
 
 
 def lambda_handler(event, context):
-    print("Client token: " + event['authorizationToken'])
-    print("Method ARN: " + event['methodArn'])
 
+    print(event)
     principalId = 'user:test'
-
     tmp = event['methodArn'].split(':')
     apiGatewayArnTmp = tmp[5].split('/')
     awsAccountId = tmp[4]
@@ -18,9 +16,14 @@ def lambda_handler(event, context):
     policy.region = tmp[3]
     policy.stage = apiGatewayArnTmp[1]
 
-    # This is where a request would be sent to an external authentication system for token verification
-    # For this demo, the token is verified if it is equal to 'allow' and other values are invalid
-    if(event['authorizationToken'] == 'allow'):
+    #
+    # This is where a request would be sent to an external
+    # authentication system for token verification
+    # For this demo, the token is verified if it is equal
+    # to '3e3541a618d9448c022f72b9' and other values are invalid
+    #
+
+    if(event['authorizationToken'] == '3e3541a618d9448c022f72b9'):
         policy.allowAllMethods()
     else:
         policy.denyAllMethods()

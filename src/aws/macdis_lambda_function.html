@@ -1,0 +1,497 @@
+<!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #888888">#!/bin/python3</span>
+
+<span style="color: #DD4422">&quot;&quot;&quot;</span>
+<span style="color: #DD4422">AWS Lambda</span>
+<span style="color: #DD4422">    def lambda_handler(event, context)</span>
+
+<span style="color: #DD4422">    def query_mac_addr_bank(dynamodb=None)</span>
+<span style="color: #DD4422">    def insert_mac_addr_bank(addr_start: str, count: int,</span>
+<span style="color: #DD4422">                userid: str, dynamodb=None) -&gt; int</span>
+<span style="color: #DD4422">    def update_mac_addr_bank(reserve: int, userid: str, dynamodb=None) -&gt; str</span>
+<span style="color: #DD4422">    def insert_mac_addr_log(userid: str, command: str, addr_start:</span>
+<span style="color: #DD4422">                            str, count: int, status: int, dynamodb=None) -&gt; int</span>
+
+<span style="color: #DD4422">    def create_mac_addr_bank_table(dynamodb=None)</span>
+<span style="color: #DD4422">    def create_mac_addr_log_table(dynamodb=None)</span>
+
+<span style="color: #DD4422">DynamoDB</span>
+<span style="color: #DD4422">    mac_addr_bank table</span>
+<span style="color: #DD4422">    mac_addr_log table</span>
+
+<span style="color: #DD4422">Command line:</span>
+<span style="color: #DD4422">    curl &#39;https://r4ctlbqq0b.execute-api.us-east-2.amazonaws.com/</span>
+<span style="color: #DD4422">        test?command=QUERY_LOG&#39; | jq</span>
+
+<span style="color: #DD4422">&quot;&quot;&quot;</span>
+<span style="color: #008800; font-weight: bold">import</span> <span style="color: #0e84b5; font-weight: bold">re</span>
+<span style="color: #008800; font-weight: bold">import</span> <span style="color: #0e84b5; font-weight: bold">boto3</span>
+<span style="color: #888888"># import time</span>
+<span style="color: #008800; font-weight: bold">from</span> <span style="color: #0e84b5; font-weight: bold">boto3.dynamodb.conditions</span> <span style="color: #008800; font-weight: bold">import</span> Key, Attr
+<span style="color: #008800; font-weight: bold">from</span> <span style="color: #0e84b5; font-weight: bold">botocore.exceptions</span> <span style="color: #008800; font-weight: bold">import</span> ClientError
+<span style="color: #008800; font-weight: bold">from</span> <span style="color: #0e84b5; font-weight: bold">decimal</span> <span style="color: #008800; font-weight: bold">import</span> Decimal
+<span style="color: #008800; font-weight: bold">from</span> <span style="color: #0e84b5; font-weight: bold">datetime</span> <span style="color: #008800; font-weight: bold">import</span> datetime
+
+
+<span style="color: #888888"># Check if a string is a correct MAC address</span>
+<span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">is_mac_str</span>(h: <span style="color: #007020">str</span>):
+    <span style="color: #008800; font-weight: bold">return</span> <span style="color: #0000DD; font-weight: bold">1</span> <span style="color: #008800; font-weight: bold">if</span> re<span style="color: #333333">.</span>match(<span style="background-color: #fff0f0">&quot;[0-9a-f]{2}([-:])[0-9a-f]{2}(</span><span style="color: #666666; font-weight: bold; background-color: #fff0f0">\\</span><span style="background-color: #fff0f0">1[0-9a-f]{2}){6}$&quot;</span>,
+                         h<span style="color: #333333">.</span>lower()) <span style="color: #008800; font-weight: bold">else</span> <span style="color: #0000DD; font-weight: bold">0</span>
+
+
+<span style="color: #888888"># Convert MAC address to int</span>
+<span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">mac_hex_to_int</span>(h: <span style="color: #007020">str</span>) <span style="color: #333333">-&gt;</span> <span style="color: #007020">int</span>:
+    h <span style="color: #333333">=</span> h<span style="color: #333333">.</span>replace(<span style="background-color: #fff0f0">&#39;:&#39;</span>, <span style="background-color: #fff0f0">&#39;&#39;</span>)
+    h <span style="color: #333333">=</span> <span style="color: #007020">int</span>(h, <span style="color: #0000DD; font-weight: bold">16</span>)
+    <span style="color: #008800; font-weight: bold">return</span> h
+
+
+<span style="color: #888888"># Convert int to MAC address</span>
+<span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">int_to_mac_hex</span>(i: <span style="color: #007020">int</span>) <span style="color: #333333">-&gt;</span> <span style="color: #007020">str</span>:
+    i <span style="color: #333333">=</span> <span style="color: #007020">str</span>(<span style="color: #007020">hex</span>(i)<span style="color: #333333">.</span>lstrip(<span style="background-color: #fff0f0">&quot;0x&quot;</span>))
+    i <span style="color: #333333">=</span> i<span style="color: #333333">.</span>upper()
+    <span style="color: #008800; font-weight: bold">return</span> <span style="background-color: #fff0f0">&quot;:&quot;</span><span style="color: #333333">.</span>join(i[_i:_i <span style="color: #333333">+</span> <span style="color: #0000DD; font-weight: bold">2</span>] <span style="color: #008800; font-weight: bold">for</span> _i <span style="color: #000000; font-weight: bold">in</span> <span style="color: #007020">range</span>(<span style="color: #0000DD; font-weight: bold">0</span>, <span style="color: #007020">len</span>(i), <span style="color: #0000DD; font-weight: bold">2</span>))
+
+
+<span style="color: #888888"># Reserver a range of MAC addresses</span>
+<span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">reserve_range_addr</span>(addr_start_hex: <span style="color: #007020">str</span>,
+                       current_remain: <span style="color: #007020">int</span>, reserve: <span style="color: #007020">int</span>) <span style="color: #333333">-&gt;</span> <span style="color: #007020">str</span>:
+
+    <span style="color: #008800; font-weight: bold">if</span> is_mac_str(addr_start_hex):
+        addr_start_int <span style="color: #333333">=</span> mac_hex_to_int(addr_start_hex) <span style="color: #333333">+</span> \
+            current_remain <span style="color: #333333">-</span> reserve
+
+        <span style="color: #008800; font-weight: bold">return</span> int_to_mac_hex(addr_start_int)
+    <span style="color: #008800; font-weight: bold">else</span>:
+        <span style="color: #008800; font-weight: bold">return</span> <span style="background-color: #fff0f0">&#39;00:00:00:00:00:00:00:00&#39;</span>
+
+
+<span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">update_mac_addr_bank</span>(reserve: <span style="color: #007020">int</span>, userid: <span style="color: #007020">str</span>, dynamodb<span style="color: #333333">=</span><span style="color: #007020">None</span>) <span style="color: #333333">-&gt;</span> <span style="color: #007020">str</span>:
+    <span style="color: #DD4422">&#39;&#39;&#39;</span>
+<span style="color: #DD4422">     Updating MAC_ADDR_BANK_TABLE</span>
+<span style="color: #DD4422">    &#39;&#39;&#39;</span>
+
+    <span style="color: #008800; font-weight: bold">global</span> MAC_ADDR_BANK_TABLE
+
+    <span style="color: #008800; font-weight: bold">if</span> <span style="color: #000000; font-weight: bold">not</span> dynamodb:
+        dynamodb <span style="color: #333333">=</span> boto3<span style="color: #333333">.</span>resource(<span style="background-color: #fff0f0">&#39;dynamodb&#39;</span>)
+
+    tstamp <span style="color: #333333">=</span> <span style="color: #007020">str</span>(datetime<span style="color: #333333">.</span>utcnow()<span style="color: #333333">.</span>isoformat())
+
+    <span style="color: #DD4422">&#39;&#39;&#39;</span>
+<span style="color: #DD4422">    mac_addr_bank SCAN</span>
+<span style="color: #DD4422">    &#39;&#39;&#39;</span>
+    table <span style="color: #333333">=</span> dynamodb<span style="color: #333333">.</span>Table(MAC_ADDR_BANK_TABLE)
+
+    response <span style="color: #333333">=</span> table<span style="color: #333333">.</span>scan(
+            FilterExpression<span style="color: #333333">=</span>Attr(<span style="background-color: #fff0f0">&#39;remain&#39;</span>)<span style="color: #333333">.</span>gte(reserve),
+            ConsistentRead<span style="color: #333333">=</span><span style="color: #007020">True</span>
+            )
+
+    available_ranges <span style="color: #333333">=</span> response[<span style="background-color: #fff0f0">&#39;Items&#39;</span>]
+    <span style="color: #DD4422">&#39;&#39;&#39;</span>
+<span style="color: #DD4422">    Find the smallest available address range</span>
+<span style="color: #DD4422">    &#39;&#39;&#39;</span>
+    <span style="color: #008800; font-weight: bold">if</span> available_ranges:
+        min_available_range <span style="color: #333333">=</span> <span style="color: #007020">min</span>(available_ranges, key<span style="color: #333333">=</span><span style="color: #008800; font-weight: bold">lambda</span> i: i[<span style="background-color: #fff0f0">&#39;remain&#39;</span>])
+    <span style="color: #008800; font-weight: bold">else</span>:
+        <span style="color: #008800; font-weight: bold">return</span> <span style="background-color: #fff0f0">&#39;00:00:00:00:00:00:00:00&#39;</span>
+
+    addr_start <span style="color: #333333">=</span> min_available_range[<span style="background-color: #fff0f0">&#39;addr_start&#39;</span>]
+    init_range <span style="color: #333333">=</span> min_available_range[<span style="background-color: #fff0f0">&#39;init_range&#39;</span>]
+    current_remain <span style="color: #333333">=</span> <span style="color: #007020">int</span>(min_available_range[<span style="background-color: #fff0f0">&#39;remain&#39;</span>])
+    min_tstamp <span style="color: #333333">=</span> min_available_range[<span style="background-color: #fff0f0">&#39;tstamp&#39;</span>]
+
+    <span style="color: #888888"># time.sleep(1)</span>
+
+    <span style="color: #DD4422">&#39;&#39;&#39;</span>
+<span style="color: #DD4422">    mac_addr_bank UPDATE</span>
+<span style="color: #DD4422">    &#39;&#39;&#39;</span>
+    <span style="color: #008800; font-weight: bold">try</span>:
+        response <span style="color: #333333">=</span> table<span style="color: #333333">.</span>update_item(
+            Key<span style="color: #333333">=</span>{
+                <span style="background-color: #fff0f0">&#39;addr_start&#39;</span>: addr_start,
+                <span style="background-color: #fff0f0">&#39;init_range&#39;</span>: init_range
+            },
+            UpdateExpression<span style="color: #333333">=</span><span style="background-color: #fff0f0">&quot;set remain=:r, tstamp=:t, userid=:u&quot;</span>,
+            ConditionExpression<span style="color: #333333">=</span><span style="background-color: #fff0f0">&quot;tstamp = :mt&quot;</span>,  <span style="color: #888888"># Make sure the data</span>
+            ExpressionAttributeValues<span style="color: #333333">=</span>{  <span style="color: #888888"># updated is the data read</span>
+                <span style="background-color: #fff0f0">&#39;:r&#39;</span>: Decimal(current_remain <span style="color: #333333">-</span> reserve),
+                <span style="background-color: #fff0f0">&#39;:t&#39;</span>: tstamp,
+                <span style="background-color: #fff0f0">&#39;:mt&#39;</span>: min_tstamp,
+                <span style="background-color: #fff0f0">&#39;:u&#39;</span>: userid
+            },
+            ReturnValues<span style="color: #333333">=</span><span style="background-color: #fff0f0">&quot;UPDATED_NEW&quot;</span>
+        )
+    <span style="color: #008800; font-weight: bold">except</span> ClientError <span style="color: #008800; font-weight: bold">as</span> _:
+        <span style="color: #008800; font-weight: bold">return</span> <span style="background-color: #fff0f0">&#39;00:00:00:00:00:00:00:00&#39;</span>
+    <span style="color: #008800; font-weight: bold">else</span>:
+        <span style="color: #008800; font-weight: bold">return</span> reserve_range_addr(addr_start, current_remain, reserve)
+
+
+<span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">insert_mac_addr_bank</span>(addr_start: <span style="color: #007020">str</span>, count: <span style="color: #007020">int</span>,
+                         userid: <span style="color: #007020">str</span>, dynamodb<span style="color: #333333">=</span><span style="color: #007020">None</span>) <span style="color: #333333">-&gt;</span> <span style="color: #007020">int</span>:
+    <span style="color: #DD4422">&#39;&#39;&#39;</span>
+<span style="color: #DD4422">     Inserting to MAC_ADDR_BANK_TABLE</span>
+<span style="color: #DD4422">    &#39;&#39;&#39;</span>
+
+    <span style="color: #008800; font-weight: bold">global</span> MAC_ADDR_BANK_TABLE
+    <span style="color: #008800; font-weight: bold">global</span> ERROR429
+    <span style="color: #008800; font-weight: bold">global</span> ERROR500
+
+    <span style="color: #008800; font-weight: bold">if</span> <span style="color: #000000; font-weight: bold">not</span> is_mac_str(addr_start):
+        <span style="color: #008800; font-weight: bold">return</span>(ERROR500)  <span style="color: #888888"># Bad Request Body</span>
+
+    <span style="color: #008800; font-weight: bold">if</span> <span style="color: #000000; font-weight: bold">not</span> dynamodb:
+        dynamodb <span style="color: #333333">=</span> boto3<span style="color: #333333">.</span>resource(<span style="background-color: #fff0f0">&#39;dynamodb&#39;</span>)
+
+    tstamp <span style="color: #333333">=</span> <span style="color: #007020">str</span>(datetime<span style="color: #333333">.</span>utcnow()<span style="color: #333333">.</span>isoformat())
+
+    table <span style="color: #333333">=</span> dynamodb<span style="color: #333333">.</span>Table(MAC_ADDR_BANK_TABLE)
+
+    response <span style="color: #333333">=</span> table<span style="color: #333333">.</span>query(
+        KeyConditionExpression<span style="color: #333333">=</span>Key(<span style="background-color: #fff0f0">&#39;addr_start&#39;</span>)<span style="color: #333333">.</span>eq(addr_start)
+    )
+
+    <span style="color: #008800; font-weight: bold">if</span> response[<span style="background-color: #fff0f0">&#39;Count&#39;</span>] <span style="color: #333333">!=</span> <span style="color: #0000DD; font-weight: bold">0</span>:
+        <span style="color: #008800; font-weight: bold">return</span> (ERROR429)  <span style="color: #888888"># Addr_start already exist</span>
+
+    response <span style="color: #333333">=</span> table<span style="color: #333333">.</span>put_item(
+       Item<span style="color: #333333">=</span>{
+            <span style="background-color: #fff0f0">&#39;addr_start&#39;</span>: addr_start,
+            <span style="background-color: #fff0f0">&#39;init_range&#39;</span>: count,
+            <span style="background-color: #fff0f0">&#39;remain&#39;</span>: count,
+            <span style="background-color: #fff0f0">&#39;userid&#39;</span>: userid,
+            <span style="background-color: #fff0f0">&#39;tstamp&#39;</span>: tstamp
+        }
+    )
+    <span style="color: #008800; font-weight: bold">return</span> response[<span style="background-color: #fff0f0">&#39;ResponseMetadata&#39;</span>][<span style="background-color: #fff0f0">&#39;HTTPStatusCode&#39;</span>]
+
+
+<span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">insert_mac_addr_log</span>(userid: <span style="color: #007020">str</span>, command: <span style="color: #007020">str</span>, addr_start: <span style="color: #007020">str</span>,
+                        count: <span style="color: #007020">int</span>, status: <span style="color: #007020">int</span>, dynamodb<span style="color: #333333">=</span><span style="color: #007020">None</span>) <span style="color: #333333">-&gt;</span> <span style="color: #007020">int</span>:
+
+    <span style="color: #DD4422">&#39;&#39;&#39;</span>
+<span style="color: #DD4422">     Inserting to MAC_ADDR_LOG_TABLE</span>
+<span style="color: #DD4422">    &#39;&#39;&#39;</span>
+
+    <span style="color: #008800; font-weight: bold">global</span> MAC_ADDR_LOG_TABLE
+    <span style="color: #008800; font-weight: bold">global</span> ERROR400
+
+    <span style="color: #008800; font-weight: bold">if</span> <span style="color: #000000; font-weight: bold">not</span> is_mac_str(addr_start):
+        <span style="color: #008800; font-weight: bold">return</span>(ERROR400)  <span style="color: #888888"># Bad Request Body</span>
+
+    <span style="color: #008800; font-weight: bold">if</span> <span style="color: #000000; font-weight: bold">not</span> dynamodb:
+        dynamodb <span style="color: #333333">=</span> boto3<span style="color: #333333">.</span>resource(<span style="background-color: #fff0f0">&#39;dynamodb&#39;</span>)
+
+    tstamp <span style="color: #333333">=</span> <span style="color: #007020">str</span>(datetime<span style="color: #333333">.</span>utcnow()<span style="color: #333333">.</span>isoformat())
+
+    table <span style="color: #333333">=</span> dynamodb<span style="color: #333333">.</span>Table(MAC_ADDR_LOG_TABLE)
+    response <span style="color: #333333">=</span> table<span style="color: #333333">.</span>put_item(
+       Item<span style="color: #333333">=</span>{
+            <span style="background-color: #fff0f0">&#39;userid&#39;</span>: userid,
+            <span style="background-color: #fff0f0">&#39;tstamp&#39;</span>: tstamp,
+            <span style="background-color: #fff0f0">&#39;command&#39;</span>: command,
+            <span style="background-color: #fff0f0">&#39;addr_start&#39;</span>: addr_start,
+            <span style="background-color: #fff0f0">&#39;count&#39;</span>: count,
+            <span style="background-color: #fff0f0">&#39;status&#39;</span>: status
+        }
+    )
+    <span style="color: #008800; font-weight: bold">return</span> response[<span style="background-color: #fff0f0">&#39;ResponseMetadata&#39;</span>][<span style="background-color: #fff0f0">&#39;HTTPStatusCode&#39;</span>]
+
+
+<span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">query_mac_addr_bank</span>(dynamodb<span style="color: #333333">=</span><span style="color: #007020">None</span>):
+
+    <span style="color: #008800; font-weight: bold">global</span> MAC_ADDR_BANK_TABLE
+
+    <span style="color: #008800; font-weight: bold">if</span> <span style="color: #000000; font-weight: bold">not</span> dynamodb:
+        dynamodb <span style="color: #333333">=</span> boto3<span style="color: #333333">.</span>resource(<span style="background-color: #fff0f0">&#39;dynamodb&#39;</span>)
+
+    table <span style="color: #333333">=</span> dynamodb<span style="color: #333333">.</span>Table(MAC_ADDR_BANK_TABLE)
+
+    response <span style="color: #333333">=</span> table<span style="color: #333333">.</span>scan()
+
+    available_ranges <span style="color: #333333">=</span> response[<span style="background-color: #fff0f0">&#39;Items&#39;</span>]
+    sum_remain <span style="color: #333333">=</span> <span style="color: #0000DD; font-weight: bold">0</span>
+    <span style="color: #008800; font-weight: bold">for</span> available_range <span style="color: #000000; font-weight: bold">in</span> available_ranges:
+        sum_remain <span style="color: #333333">+=</span> <span style="color: #007020">int</span>(available_range[<span style="background-color: #fff0f0">&#39;remain&#39;</span>])
+    <span style="color: #008800; font-weight: bold">return</span> sum_remain
+
+
+<span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">query_mac_addr_logs</span>(userid: <span style="color: #007020">str</span>, dynamodb<span style="color: #333333">=</span><span style="color: #007020">None</span>):
+
+    <span style="color: #008800; font-weight: bold">global</span> MAC_ADDR_LOG_TABLE
+
+    <span style="color: #008800; font-weight: bold">if</span> <span style="color: #000000; font-weight: bold">not</span> dynamodb:
+        dynamodb <span style="color: #333333">=</span> boto3<span style="color: #333333">.</span>resource(<span style="background-color: #fff0f0">&#39;dynamodb&#39;</span>)
+
+    table <span style="color: #333333">=</span> dynamodb<span style="color: #333333">.</span>Table(MAC_ADDR_LOG_TABLE)
+
+    response <span style="color: #333333">=</span> table<span style="color: #333333">.</span>query(
+        KeyConditionExpression<span style="color: #333333">=</span>Key(<span style="background-color: #fff0f0">&#39;userid&#39;</span>)<span style="color: #333333">.</span>eq(userid)
+    )
+
+    logs <span style="color: #333333">=</span> response[<span style="background-color: #fff0f0">&#39;Items&#39;</span>]
+    <span style="color: #008800; font-weight: bold">return</span> logs
+
+
+<span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">create_mac_addr_bank_table</span>(dynamodb<span style="color: #333333">=</span><span style="color: #007020">None</span>):
+
+    <span style="color: #008800; font-weight: bold">global</span> MAC_ADDR_BANK_TABLE
+    <span style="color: #008800; font-weight: bold">global</span> RETURNOK
+
+    <span style="color: #008800; font-weight: bold">if</span> <span style="color: #000000; font-weight: bold">not</span> dynamodb:
+        dynamodb <span style="color: #333333">=</span> boto3<span style="color: #333333">.</span>resource(<span style="background-color: #fff0f0">&#39;dynamodb&#39;</span>)
+
+    <span style="color: #008800; font-weight: bold">try</span>:
+        _ <span style="color: #333333">=</span> dynamodb<span style="color: #333333">.</span>create_table(
+            TableName<span style="color: #333333">=</span>MAC_ADDR_BANK_TABLE,
+            KeySchema<span style="color: #333333">=</span>[
+                {
+                    <span style="background-color: #fff0f0">&#39;AttributeName&#39;</span>: <span style="background-color: #fff0f0">&#39;addr_start&#39;</span>,
+                    <span style="background-color: #fff0f0">&#39;KeyType&#39;</span>: <span style="background-color: #fff0f0">&#39;HASH&#39;</span>  <span style="color: #888888"># Partition key</span>
+                },
+                {
+                    <span style="background-color: #fff0f0">&#39;AttributeName&#39;</span>: <span style="background-color: #fff0f0">&#39;init_range&#39;</span>,
+                    <span style="background-color: #fff0f0">&#39;KeyType&#39;</span>: <span style="background-color: #fff0f0">&#39;RANGE&#39;</span>  <span style="color: #888888"># Sort key</span>
+                },
+            ],
+            AttributeDefinitions<span style="color: #333333">=</span>[
+                {
+                    <span style="background-color: #fff0f0">&#39;AttributeName&#39;</span>: <span style="background-color: #fff0f0">&#39;addr_start&#39;</span>,
+                    <span style="background-color: #fff0f0">&#39;AttributeType&#39;</span>: <span style="background-color: #fff0f0">&#39;S&#39;</span>
+                },
+                {
+                    <span style="background-color: #fff0f0">&#39;AttributeName&#39;</span>: <span style="background-color: #fff0f0">&#39;init_range&#39;</span>,
+                    <span style="background-color: #fff0f0">&#39;AttributeType&#39;</span>: <span style="background-color: #fff0f0">&#39;N&#39;</span>
+                },
+            ],
+            ProvisionedThroughput<span style="color: #333333">=</span>{
+                <span style="background-color: #fff0f0">&#39;ReadCapacityUnits&#39;</span>: <span style="color: #0000DD; font-weight: bold">5</span>,
+                <span style="background-color: #fff0f0">&#39;WriteCapacityUnits&#39;</span>: <span style="color: #0000DD; font-weight: bold">5</span>
+            }
+        )
+    <span style="color: #008800; font-weight: bold">except</span> <span style="color: #FF0000; font-weight: bold">Exception</span> <span style="color: #008800; font-weight: bold">as</span> err:
+        <span style="color: #008800; font-weight: bold">return</span> err
+    <span style="color: #008800; font-weight: bold">else</span>:
+        <span style="color: #008800; font-weight: bold">return</span> RETURNOK
+
+
+<span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">create_mac_addr_log_table</span>(dynamodb<span style="color: #333333">=</span><span style="color: #007020">None</span>):
+
+    <span style="color: #008800; font-weight: bold">global</span> MAC_ADDR_LOG_TABLE
+    <span style="color: #008800; font-weight: bold">global</span> RETURNOK
+
+    <span style="color: #008800; font-weight: bold">if</span> <span style="color: #000000; font-weight: bold">not</span> dynamodb:
+        dynamodb <span style="color: #333333">=</span> boto3<span style="color: #333333">.</span>resource(<span style="background-color: #fff0f0">&#39;dynamodb&#39;</span>)
+
+    <span style="color: #008800; font-weight: bold">try</span>:
+        _ <span style="color: #333333">=</span> dynamodb<span style="color: #333333">.</span>create_table(
+            TableName<span style="color: #333333">=</span>MAC_ADDR_LOG_TABLE,
+            KeySchema<span style="color: #333333">=</span>[
+                {
+                    <span style="background-color: #fff0f0">&#39;AttributeName&#39;</span>: <span style="background-color: #fff0f0">&#39;userid&#39;</span>,
+                    <span style="background-color: #fff0f0">&#39;KeyType&#39;</span>: <span style="background-color: #fff0f0">&#39;HASH&#39;</span>  <span style="color: #888888"># Partition key</span>
+                },
+                {
+                    <span style="background-color: #fff0f0">&#39;AttributeName&#39;</span>: <span style="background-color: #fff0f0">&#39;tstamp&#39;</span>,
+                    <span style="background-color: #fff0f0">&#39;KeyType&#39;</span>: <span style="background-color: #fff0f0">&#39;RANGE&#39;</span>  <span style="color: #888888"># Sort key</span>
+                },
+            ],
+            AttributeDefinitions<span style="color: #333333">=</span>[
+                {
+                    <span style="background-color: #fff0f0">&#39;AttributeName&#39;</span>: <span style="background-color: #fff0f0">&#39;userid&#39;</span>,
+                    <span style="background-color: #fff0f0">&#39;AttributeType&#39;</span>: <span style="background-color: #fff0f0">&#39;S&#39;</span>
+                },
+                {
+                    <span style="background-color: #fff0f0">&#39;AttributeName&#39;</span>: <span style="background-color: #fff0f0">&#39;tstamp&#39;</span>,
+                    <span style="background-color: #fff0f0">&#39;AttributeType&#39;</span>: <span style="background-color: #fff0f0">&#39;S&#39;</span>
+                },
+            ],
+            ProvisionedThroughput<span style="color: #333333">=</span>{
+                <span style="background-color: #fff0f0">&#39;ReadCapacityUnits&#39;</span>: <span style="color: #0000DD; font-weight: bold">5</span>,
+                <span style="background-color: #fff0f0">&#39;WriteCapacityUnits&#39;</span>: <span style="color: #0000DD; font-weight: bold">5</span>
+            }
+        )
+    <span style="color: #008800; font-weight: bold">except</span> <span style="color: #FF0000; font-weight: bold">Exception</span> <span style="color: #008800; font-weight: bold">as</span> err:
+        <span style="color: #008800; font-weight: bold">return</span> err
+    <span style="color: #008800; font-weight: bold">else</span>:
+        <span style="color: #008800; font-weight: bold">return</span> RETURNOK
+
+
+<span style="color: #008800; font-weight: bold">def</span> <span style="color: #0066BB; font-weight: bold">lambda_handler</span>(event, context):
+
+    <span style="color: #008800; font-weight: bold">global</span> MAC_ADDR_BANK_TABLE
+    <span style="color: #008800; font-weight: bold">global</span> MAC_ADDR_LOG_TABLE
+
+    <span style="color: #008800; font-weight: bold">global</span> ERROR400
+    <span style="color: #008800; font-weight: bold">global</span> ERROR429
+    <span style="color: #008800; font-weight: bold">global</span> ERROR500
+    <span style="color: #008800; font-weight: bold">global</span> RETURNOK  <span style="color: #888888"># do not change</span>
+
+    ERROR400 <span style="color: #333333">=</span> <span style="color: #0000DD; font-weight: bold">400</span>
+    ERROR429 <span style="color: #333333">=</span> <span style="color: #0000DD; font-weight: bold">429</span>
+    ERROR500 <span style="color: #333333">=</span> <span style="color: #0000DD; font-weight: bold">500</span>
+    RETURNOK <span style="color: #333333">=</span> <span style="color: #0000DD; font-weight: bold">200</span>
+
+    context <span style="color: #333333">=</span> event[<span style="background-color: #fff0f0">&#39;context&#39;</span>]
+    params <span style="color: #333333">=</span> event[<span style="background-color: #fff0f0">&#39;params&#39;</span>]
+    querystring <span style="color: #333333">=</span> params[<span style="background-color: #fff0f0">&#39;querystring&#39;</span>]
+
+    stage <span style="color: #333333">=</span> context[<span style="background-color: #fff0f0">&#39;stage&#39;</span>]
+    userid <span style="color: #333333">=</span> context[<span style="background-color: #fff0f0">&#39;source-ip&#39;</span>]
+    resource_path <span style="color: #333333">=</span> context[<span style="background-color: #fff0f0">&#39;resource-path&#39;</span>]
+
+    <span style="color: #008800; font-weight: bold">if</span> <span style="background-color: #fff0f0">&#39;addr_start&#39;</span> <span style="color: #000000; font-weight: bold">in</span> querystring:
+        addr_start <span style="color: #333333">=</span> querystring[<span style="background-color: #fff0f0">&#39;addr_start&#39;</span>]
+    <span style="color: #008800; font-weight: bold">else</span>:
+        addr_start <span style="color: #333333">=</span> <span style="background-color: #fff0f0">&#39;00:00:00:00:00:00:00:00&#39;</span>
+
+    <span style="color: #008800; font-weight: bold">if</span> <span style="background-color: #fff0f0">&#39;count&#39;</span> <span style="color: #000000; font-weight: bold">in</span> querystring:
+        count <span style="color: #333333">=</span> <span style="color: #007020">int</span>(querystring[<span style="background-color: #fff0f0">&#39;count&#39;</span>])
+    <span style="color: #008800; font-weight: bold">else</span>:
+        count <span style="color: #333333">=</span> <span style="color: #0000DD; font-weight: bold">0</span>
+
+    command <span style="color: #333333">=</span> resource_path[<span style="color: #0000DD; font-weight: bold">1</span>:]
+
+    tstart <span style="color: #333333">=</span> <span style="color: #007020">str</span>(datetime<span style="color: #333333">.</span>utcnow()<span style="color: #333333">.</span>isoformat())
+
+    <span style="color: #008800; font-weight: bold">if</span> stage <span style="color: #333333">==</span> <span style="background-color: #fff0f0">&#39;beta&#39;</span>:
+        MAC_ADDR_BANK_TABLE <span style="color: #333333">=</span> <span style="background-color: #fff0f0">&#39;mac_addr_bank.beta&#39;</span>
+        MAC_ADDR_LOG_TABLE <span style="color: #333333">=</span> <span style="background-color: #fff0f0">&#39;mac_addr_log.beta&#39;</span>
+    <span style="color: #008800; font-weight: bold">elif</span> stage <span style="color: #000000; font-weight: bold">in</span> (<span style="background-color: #fff0f0">&#39;test&#39;</span>, <span style="background-color: #fff0f0">&#39;test-invoke-stage&#39;</span>):
+        MAC_ADDR_BANK_TABLE <span style="color: #333333">=</span> <span style="background-color: #fff0f0">&#39;mac_addr_bank.test&#39;</span>
+        MAC_ADDR_LOG_TABLE <span style="color: #333333">=</span> <span style="background-color: #fff0f0">&#39;mac_addr_log.test&#39;</span>
+    <span style="color: #008800; font-weight: bold">elif</span> stage <span style="color: #333333">==</span> <span style="background-color: #fff0f0">&#39;prod&#39;</span>:
+        MAC_ADDR_BANK_TABLE <span style="color: #333333">=</span> <span style="background-color: #fff0f0">&#39;mac_addr_bank.prod&#39;</span>
+        MAC_ADDR_LOG_TABLE <span style="color: #333333">=</span> <span style="background-color: #fff0f0">&#39;mac_addr_log.prod&#39;</span>
+    <span style="color: #008800; font-weight: bold">else</span>:
+        MAC_ADDR_BANK_TABLE <span style="color: #333333">=</span> <span style="background-color: #fff0f0">&#39;mac_addr_bank.test&#39;</span>
+        MAC_ADDR_LOG_TABLE <span style="color: #333333">=</span> <span style="background-color: #fff0f0">&#39;mac_addr_log.test&#39;</span>
+
+    <span style="color: #008800; font-weight: bold">if</span> command <span style="color: #333333">==</span> <span style="background-color: #fff0f0">&#39;reserve-mac&#39;</span>:
+        <span style="color: #008800; font-weight: bold">if</span> count:
+            addr_start <span style="color: #333333">=</span> update_mac_addr_bank(count, userid)
+        <span style="color: #008800; font-weight: bold">if</span> addr_start <span style="color: #333333">!=</span> <span style="background-color: #fff0f0">&#39;00:00:00:00:00:00:00:00&#39;</span>:
+            msg <span style="color: #333333">=</span> <span style="background-color: #fff0f0">&quot;MAC address range reserved successfully.&quot;</span>
+            ret <span style="color: #333333">=</span> RETURNOK
+        <span style="color: #008800; font-weight: bold">else</span>:
+            msg <span style="color: #333333">=</span> <span style="background-color: #fff0f0">&quot;MAC address range reserve failure.&quot;</span>
+            ret <span style="color: #333333">=</span> ERROR400
+
+        insert_mac_addr_log(userid, command, addr_start, count, ret)
+        tend <span style="color: #333333">=</span> <span style="color: #007020">str</span>(datetime<span style="color: #333333">.</span>utcnow()<span style="color: #333333">.</span>isoformat())
+        <span style="color: #008800; font-weight: bold">return</span> {
+                <span style="background-color: #fff0f0">&#39;statusCode&#39;</span>: ret,
+                <span style="background-color: #fff0f0">&#39;body&#39;</span>: {<span style="background-color: #fff0f0">&quot;Msg&quot;</span>: msg, <span style="background-color: #fff0f0">&quot;command&quot;</span>: command,
+                         <span style="background-color: #fff0f0">&quot;addr_start&quot;</span>: addr_start, <span style="background-color: #fff0f0">&quot;count&quot;</span>: count,
+                         <span style="background-color: #fff0f0">&quot;tstart&quot;</span>: tstart, <span style="background-color: #fff0f0">&quot;tend&quot;</span>: tend}
+                }
+
+    <span style="color: #008800; font-weight: bold">elif</span> command <span style="color: #000000; font-weight: bold">in</span> (<span style="background-color: #fff0f0">&#39;return-mac&#39;</span>, <span style="background-color: #fff0f0">&#39;set-mac&#39;</span>):
+        <span style="color: #008800; font-weight: bold">if</span> addr_start <span style="color: #000000; font-weight: bold">and</span> count:
+            ret <span style="color: #333333">=</span> insert_mac_addr_bank(addr_start, count, userid)
+        <span style="color: #008800; font-weight: bold">else</span>:
+            ret <span style="color: #333333">=</span> ERROR400
+
+        <span style="color: #008800; font-weight: bold">if</span> (ret <span style="color: #333333">==</span> RETURNOK):
+            msg <span style="color: #333333">=</span> <span style="background-color: #fff0f0">&quot;MAC address range set/returned successfully.&quot;</span>
+        <span style="color: #008800; font-weight: bold">else</span>:
+            ret <span style="color: #333333">=</span> ERROR400
+            msg <span style="color: #333333">=</span> <span style="background-color: #fff0f0">&quot;MAC address range set/returned failed.&quot;</span>
+
+        insert_mac_addr_log(userid, command, addr_start, count, ret)
+        tend <span style="color: #333333">=</span> <span style="color: #007020">str</span>(datetime<span style="color: #333333">.</span>utcnow()<span style="color: #333333">.</span>isoformat())
+        <span style="color: #008800; font-weight: bold">return</span> {
+                <span style="background-color: #fff0f0">&#39;statusCode&#39;</span>: ret,
+                <span style="background-color: #fff0f0">&#39;body&#39;</span>: {<span style="background-color: #fff0f0">&quot;Msg&quot;</span>: msg, <span style="background-color: #fff0f0">&quot;command&quot;</span>: command,
+                         <span style="background-color: #fff0f0">&quot;addr_start&quot;</span>: addr_start, <span style="background-color: #fff0f0">&quot;count&quot;</span>: count,
+                         <span style="background-color: #fff0f0">&quot;tstart&quot;</span>: tstart, <span style="background-color: #fff0f0">&quot;tend&quot;</span>: tend}
+                }
+
+    <span style="color: #008800; font-weight: bold">elif</span> command <span style="color: #333333">==</span> <span style="background-color: #fff0f0">&#39;query-mac&#39;</span>:
+        sum_remain <span style="color: #333333">=</span> query_mac_addr_bank()
+        tend <span style="color: #333333">=</span> <span style="color: #007020">str</span>(datetime<span style="color: #333333">.</span>utcnow()<span style="color: #333333">.</span>isoformat())
+        <span style="color: #008800; font-weight: bold">return</span> {
+                <span style="background-color: #fff0f0">&#39;statusCode&#39;</span>: RETURNOK,
+                <span style="background-color: #fff0f0">&#39;body&#39;</span>: {<span style="background-color: #fff0f0">&quot;command&quot;</span>: command, <span style="background-color: #fff0f0">&quot;remain&quot;</span>: sum_remain,
+                         <span style="background-color: #fff0f0">&quot;tstart&quot;</span>: tstart, <span style="background-color: #fff0f0">&quot;tend&quot;</span>: tend}
+                }
+
+    <span style="color: #008800; font-weight: bold">elif</span> command <span style="color: #333333">==</span> <span style="background-color: #fff0f0">&#39;query-log&#39;</span>:
+        logs <span style="color: #333333">=</span> query_mac_addr_logs(userid)
+        <span style="color: #008800; font-weight: bold">return</span> logs
+
+    <span style="color: #008800; font-weight: bold">elif</span> command <span style="color: #333333">==</span> <span style="background-color: #fff0f0">&#39;create-table&#39;</span>:
+        tstart <span style="color: #333333">=</span> <span style="color: #007020">str</span>(datetime<span style="color: #333333">.</span>utcnow()<span style="color: #333333">.</span>isoformat())
+        ret1 <span style="color: #333333">=</span> create_mac_addr_bank_table()
+        tend <span style="color: #333333">=</span> <span style="color: #007020">str</span>(datetime<span style="color: #333333">.</span>utcnow()<span style="color: #333333">.</span>isoformat())
+        <span style="color: #008800; font-weight: bold">if</span> ret1 <span style="color: #333333">==</span> RETURNOK:
+            <span style="color: #008800; font-weight: bold">return</span> {
+                        <span style="background-color: #fff0f0">&#39;statusCode&#39;</span>: ERROR400,
+                        <span style="background-color: #fff0f0">&#39;body&#39;</span>: {<span style="background-color: #fff0f0">&quot;Msg&quot;</span>: ret1, <span style="background-color: #fff0f0">&quot;command&quot;</span>: command,
+                                 <span style="background-color: #fff0f0">&quot;tstart&quot;</span>: tstart, <span style="background-color: #fff0f0">&quot;tend&quot;</span>: tend}
+                    }
+        ret2 <span style="color: #333333">=</span> create_mac_addr_log_table()
+        tend <span style="color: #333333">=</span> <span style="color: #007020">str</span>(datetime<span style="color: #333333">.</span>utcnow()<span style="color: #333333">.</span>isoformat())
+        <span style="color: #008800; font-weight: bold">if</span> ret2 <span style="color: #333333">==</span> RETURNOK:
+            <span style="color: #008800; font-weight: bold">return</span> {
+                        <span style="background-color: #fff0f0">&#39;statusCode&#39;</span>: ERROR400,
+                        <span style="background-color: #fff0f0">&#39;body&#39;</span>: {<span style="background-color: #fff0f0">&quot;Msg&quot;</span>: ret2, <span style="background-color: #fff0f0">&quot;command&quot;</span>: command,
+                                 <span style="background-color: #fff0f0">&quot;tstart&quot;</span>: tstart, <span style="background-color: #fff0f0">&quot;tend&quot;</span>: tend}
+                    }
+
+        tend <span style="color: #333333">=</span> <span style="color: #007020">str</span>(datetime<span style="color: #333333">.</span>utcnow()<span style="color: #333333">.</span>isoformat())
+        <span style="color: #008800; font-weight: bold">return</span> {
+                    <span style="background-color: #fff0f0">&#39;statusCode&#39;</span>: RETURNOK,
+                    <span style="background-color: #fff0f0">&#39;body&#39;</span>: {<span style="background-color: #fff0f0">&quot;Msg&quot;</span>: <span style="background-color: #fff0f0">&quot;Table created successfully.&quot;</span>,
+                             <span style="background-color: #fff0f0">&quot;command&quot;</span>: command, <span style="background-color: #fff0f0">&quot;tstart&quot;</span>: tstart,
+                             <span style="background-color: #fff0f0">&quot;tend&quot;</span>: tend}
+                }
+
+
+<span style="color: #008800; font-weight: bold">if</span> __name__ <span style="color: #333333">==</span> <span style="background-color: #fff0f0">&#39;__main__&#39;</span>:
+    <span style="color: #008800; font-weight: bold">global</span> MAC_ADDR_BANK_TABLE
+    <span style="color: #008800; font-weight: bold">global</span> MAC_ADDR_LOG_TABLE
+
+    MAC_ADDR_BANK_TABLE <span style="color: #333333">=</span> <span style="background-color: #fff0f0">&#39;mac_addr_bank&#39;</span>
+    MAC_ADDR_LOG_TABLE <span style="color: #333333">=</span> <span style="background-color: #fff0f0">&#39;mac_addr_log&#39;</span>
+
+    <span style="color: #008800; font-weight: bold">global</span> ERROR400
+    <span style="color: #008800; font-weight: bold">global</span> ERROR429
+    <span style="color: #008800; font-weight: bold">global</span> ERROR500
+    <span style="color: #008800; font-weight: bold">global</span> RETURNOK  <span style="color: #888888"># do not change</span>
+
+    ERROR400 <span style="color: #333333">=</span> <span style="color: #0000DD; font-weight: bold">400</span>
+    ERROR429 <span style="color: #333333">=</span> <span style="color: #0000DD; font-weight: bold">429</span>
+    ERROR500 <span style="color: #333333">=</span> <span style="color: #0000DD; font-weight: bold">500</span>
+    RETURNOK <span style="color: #333333">=</span> <span style="color: #0000DD; font-weight: bold">200</span>
+
+    event <span style="color: #333333">=</span> {
+        <span style="background-color: #fff0f0">&#39;params&#39;</span>: {
+                <span style="background-color: #fff0f0">&#39;querystring&#39;</span>: {
+                    <span style="color: #888888">#    &#39;addr_start&#39;: &#39;C4:98:A6:00:00:00:00:00&#39;,</span>
+                    <span style="color: #888888">#    &#39;addr_start&#39;: &#39;C4:98:A8:00:00:00:00:00&#39;,</span>
+                    <span style="color: #888888">#    &#39;addr_start&#39;: &#39;C4:98:A6:00:00:00:00:00&#39;,</span>
+                    <span style="background-color: #fff0f0">&#39;addr_start&#39;</span>: <span style="background-color: #fff0f0">&#39;C4:98:A5:00:00:00:00:00&#39;</span>,
+                    <span style="background-color: #fff0f0">&#39;count&#39;</span>: <span style="color: #0000DD; font-weight: bold">10</span>
+                    }
+        },
+        <span style="background-color: #fff0f0">&#39;context&#39;</span>: {
+            <span style="background-color: #fff0f0">&#39;source-ip&#39;</span>: <span style="background-color: #fff0f0">&#39;108.253.242.242&#39;</span>,
+            <span style="background-color: #fff0f0">&#39;stage&#39;</span>: <span style="background-color: #fff0f0">&#39;test&#39;</span>,
+            <span style="color: #888888">#    &#39;stage&#39;: &#39;beta&#39;</span>
+            <span style="color: #888888">#    &#39;stage&#39;: &#39;test&#39;</span>
+            <span style="color: #888888">#    &#39;stage&#39;: &#39;prod&#39;</span>
+            <span style="color: #888888">#    &quot;resource-path&quot;: &quot;/query-mac&quot;</span>
+            <span style="color: #888888">#    &quot;resource-path&quot;: &quot;/reserve-mac&quot;</span>
+            <span style="color: #888888">#    &quot;resource-path&quot;: &quot;/return-mac&quot;</span>
+            <span style="color: #888888">#    &quot;resource-path&quot;: &quot;/set-mac&quot;</span>
+            <span style="color: #888888">#    &quot;resource-path&quot;: &quot;/query-log&quot;</span>
+            <span style="color: #888888">#    &quot;resource-path&quot;: &quot;/create-table&quot;</span>
+            <span style="background-color: #fff0f0">&quot;resource-path&quot;</span>: <span style="background-color: #fff0f0">&quot;/query-mac&quot;</span>
+            }
+        }
+    context <span style="color: #333333">=</span> <span style="background-color: #fff0f0">&#39;&#39;</span>
+
+    <span style="color: #008800; font-weight: bold">print</span>(lambda_handler(event, context))
+</pre></div>

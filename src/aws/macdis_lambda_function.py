@@ -19,8 +19,10 @@ DynamoDB
     mac_addr_log table
 
 Command line:
-    curl 'https://r4ctlbqq0b.execute-api.us-east-2.amazonaws.com/
-        test?command=QUERY_LOG' | jq
+    curl -X GET -H 'jwt_token: ???' -s
+    'https://ef99bsrnr6.execute-api.us-east-2.amazonaws.com/
+        test/reserve-mac?count=1' | jq
+
 
 """
 import re

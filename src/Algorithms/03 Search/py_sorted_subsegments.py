@@ -171,6 +171,7 @@ if __name__ == '__main__':
     n = 8
 
     arr = R.sample(range(0, n), n)
+    print(arr)
     # arr = [4, 2, 1, 6, 3, 0, 5]
     # arr = [1, 2, 3, 4, 5, 6, 7]
 
@@ -178,6 +179,6 @@ if __name__ == '__main__':
     for a in arr:
         t = merge(t, Treap(a))
     print(t)
-    print(repr(t))
-    t.sort()
+    # print(repr(t))
+    # t.sort()
 

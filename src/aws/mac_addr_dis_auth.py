@@ -1,12 +1,11 @@
-from __future__ import print_function
-
+import requests
 import re
 
 
 def lambda_handler(event, context):
 
     # print(event)
-    principalId = 'user:test'
+    principalId = 'mac-add-dis'
     tmp = event['methodArn'].split(':')
     apiGatewayArnTmp = tmp[5].split('/')
     awsAccountId = tmp[4]
@@ -16,12 +15,19 @@ def lambda_handler(event, context):
     policy.region = tmp[3]
     policy.stage = apiGatewayArnTmp[1]
 
-    #
-    # This is where a request would be sent to an external authentication system for token verification
-    # For this demo, the token is verified if it is equal to '3e3541a618d9448c022f72b9' and other values are invalid
-    #
+    url = "https://dev-8925736.okta.com/api/v1/users/me"
 
-    if(event['authorizationToken'] == '3e3541a618d9448c022f72b9'):
+    payload = {}
+    headers = {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+      'Authorization': event['authorizationToken']
+    }
+
+    response = requests.request("GET", url, headers=headers,
+                                data=payload).json()
+
+    if('status' in response) and (response['status'] == 'ACTIVE'):
         policy.allowAllMethods()
     else:
         policy.denyAllMethods()
